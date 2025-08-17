@@ -49,12 +49,10 @@
             transition: transform 0.3s ease;
         }
 
-        .navbar-brand:hover {
-            transform: scale(1.05);
-        }
+        .navbar-brand:hover { transform: scale(1.05); }
 
         .navbar-brand img {
-            height: 60px; /* Tamaño aumentado del logo */
+            height: 50px;
             width: auto;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
@@ -63,7 +61,7 @@
             font-weight: 700;
             color: white;
             margin-left: 10px;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
@@ -75,32 +73,18 @@
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            color: white !important; /* Texto blanco forzado */
+            color: white !important;
         }
-
-        .nav-link i {
-            margin-right: 8px;
-            font-size: 1.1rem;
-            color: white; /* Iconos blancos */
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background-color: rgba(255,255,255,0.15);
-            transform: translateY(-2px);
-        }
-
-        .nav-link.active {
-            font-weight: 600;
-            color: var(--secondary-color) !important;
-        }
+        .nav-link i { margin-right: 8px; font-size: 1.1rem; color: white; }
+        .nav-link:hover, .nav-link.active { background-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
 
         /* ======== Contenido Principal ======== */
         .main-container {
             background: white;
             border-radius: 1rem;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            padding: 2rem;
-            margin-top: 2rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
         }
 
         .page-title {
@@ -110,168 +94,59 @@
             display: flex;
             align-items: center;
         }
-
-        .page-title i {
-            color: var(--primary-color);
-            margin-right: 10px;
-        }
+        .page-title i { color: var(--primary-color); margin-right: 10px; }
 
         /* ======== Filtros ======== */
         .filter-container {
             background: #f8f9fa;
             border-radius: 0.8rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
         }
-
-        .filter-form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .filter-form .form-control {
+        .filter-form .form-group { margin-bottom: 0.75rem; }
+        .filter-form label { font-weight: 600; color: var(--dark-gray); margin-bottom: 0.25rem; font-size: 0.9rem; }
+        .filter-form .form-control, .filter-form .form-select {
             border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.75rem;
             border: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .filter-form label {
-            font-weight: 600;
-            color: var(--dark-gray);
-            margin-bottom: 0;
+            font-size: 0.9rem;
         }
 
         /* ======== Tabla ======== */
-        .table-responsive {
-            border-radius: 0.8rem;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
+        .table-responsive { border-radius: 0.8rem; overflow-x: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .table { margin-bottom: 0; width: 100%; min-width: 1000px; }
         .table thead th {
             background-color: var(--primary-dark);
-            color: white;
-            font-weight: 600;
-            border-bottom: none;
+            color: white; font-weight: 600; border-bottom: none; font-size: 0.9rem; padding: 0.75rem; white-space: nowrap;
         }
-
-        .table tbody tr {
-            transition: all 0.2s ease;
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(7, 101, 203, 0.05);
-        }
+        .table tbody tr { transition: all 0.2s ease; }
+        .table tbody tr:hover { background-color: rgba(7, 101, 203, 0.05); }
+        .table tbody td { vertical-align: middle; padding: 0.75rem; font-size: 0.9rem; border-top: 1px solid #f0f0f0; white-space: nowrap; }
 
         .vehiculo-img {
-            width: 80px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 0.5rem;
-            border: 1px solid rgba(0,0,0,0.1);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            width: 60px; height: 45px; object-fit: cover; border-radius: 0.4rem; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         /* ======== Botones ======== */
-        .btn {
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn i {
-            margin-right: 6px;
-        }
-
-        .btn-sm {
-            padding: 0.35rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        .btn-primary {
-            background: var(--primary-color);
-            border: none;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(7, 101, 203, 0.2);
-            color: white;
-        }
-
-        .btn-outline-danger {
-            border-color: var(--danger-color);
-            color: var(--danger-color);
-        }
-
-        .btn-outline-danger:hover {
-            background: var(--danger-color);
-            color: white;
-        }
+        .btn { border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; white-space: nowrap; }
+        .btn i { margin-right: 5px; font-size: 0.9rem; }
+        .btn-sm { padding: 0.35rem 0.6rem; font-size: 0.8rem; }
+        .btn-primary { background: var(--primary-color); border: none; color: white; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(7, 101, 203, 0.2); color: white; }
 
         /* ======== Paginación ======== */
-        .pagination {
-            margin-top: 2rem;
-        }
-
-        .page-item.active .page-link {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .page-link {
-            color: var(--primary-color);
-            border-radius: 0.5rem !important;
-            margin: 0 0.25rem;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .page-link:hover {
-            color: var(--primary-dark);
-            background-color: rgba(7, 101, 203, 0.1);
-        }
+        .pagination { margin-top: 1.5rem; justify-content: center; }
+        .page-item.active .page-link { background-color: var(--primary-color); border-color: var(--primary-color); }
+        .page-link { color: var(--primary-color); border-radius: 0.5rem !important; margin: 0 0.15rem; border: 1px solid rgba(0,0,0,0.1); font-size: 0.9rem; padding: 0.5rem 0.75rem; }
+        .page-link:hover { color: var(--primary-dark); background-color: rgba(7, 101, 203, 0.1); }
 
         /* ======== Mensajes ======== */
-        .no-results {
-            text-align: center;
-            padding: 2rem;
-            color: var(--dark-gray);
-            opacity: 0.7;
-        }
+        .no-results { text-align: center; padding: 2rem; color: var(--dark-gray); opacity: 0.7; }
 
         /* ======== Responsive ======== */
-        @media (max-width: 768px) {
-            .filter-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .filter-form .form-control {
-                width: 100% !important;
-                max-width: none !important;
-            }
-            
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .vehiculo-img {
-                width: 60px;
-                height: 45px;
-            }
+        /* Importante: NO ocultamos la tabla en móviles. Usamos scroll horizontal con .table-responsive */
+        @media (max-width: 575px) {
+            .navbar-brand span { display: none; }
         }
     </style>
 </head>
@@ -285,6 +160,11 @@
             <img src="{% static 'img/logo2.png' %}" alt="Moster Check" class="img-fluid">
         </a>
 
+        <!-- Botón hamburguesa -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-list text-white" style="font-size: 1.8rem;"></i>
+        </button>
+
         <!-- Menú -->
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -293,6 +173,7 @@
                         <i class="bi bi-plus-circle"></i> Registrar Vehículo
                     </a>
                 </li>
+                
             </ul>
 
             <!-- Cerrar sesión -->
@@ -316,71 +197,142 @@
             {% endif %}
         </div>
 
-        <!-- BUSCADOR -->
+        <!-- BUSCADOR Y FILTROS -->
         <div class="filter-container">
-            <form method="get" class="filter-form">
-                <!-- [Mismo formulario de búsqueda] -->
+            <form method="get" class="row g-3 filter-form">
+                <div class="col-12 col-md-4">
+                    <label for="buscar" class="form-label">Buscar por patente</label>
+                    <div class="input-group">
+                        <input type="text" id="buscar" name="buscar" class="form-control" placeholder="Ej: AB1234" value="{{ request.GET.buscar }}" autocomplete="off">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label for="fecha_inicio" class="form-label">Desde</label>
+                    <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label for="fecha_fin" class="form-label">Hasta</label>
+                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+                </div>
+
+                <div class="col-12 col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                </div>
+
+                {% if request.GET.buscar or request.GET.fecha_inicio or request.GET.fecha_fin %}
+                <div class="col-12">
+                    <a href="{% url 'listar_vehiculos' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-x-circle"></i> Limpiar filtros
+                    </a>
+                </div>
+                {% endif %}
             </form>
         </div>
 
         {% if page_obj %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle" id="vehiculosTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Fecha</th>
-                        {% if es_admin_jefe %}<th>Registrado por</th>{% endif %}
-                        <th>Patente</th>
-                        <th>Imagen</th>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Motor</th>
-                        <th>Combustible</th>
-                        <th>Color</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vehiculo in page_obj %}
-                    <tr>
-                        <td>{{ vehiculo.id }}</td>
-                        <td>{{ vehiculo.fecha_registro|date:"d/m/Y" }}</td>
-                        {% if es_admin_jefe %}
-                        <td>
-                            {% if vehiculo.usuario_registro %}
-                                {{ vehiculo.usuario_registro.get_full_name|default:vehiculo.usuario_registro.username }}
-                            {% else %}
-                                Sistema
+            <!-- TABLA RESPONSIVE SIEMPRE (con scroll horizontal en móviles) -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="vehiculosTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            {% if es_admin_jefe %}<th>Registrado por</th>{% endif %}
+                            <th>Patente</th>
+                            <th>Imagen</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Motor</th>
+                            <th>Combustible</th>
+                            <th>Color</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehiculo in page_obj %}
+                        <tr>
+                            <td>{{ vehiculo.id }}</td>
+                            <td>{{ vehiculo.fecha_registro|date:"d/m/Y" }}</td>
+                            {% if es_admin_jefe %}
+                            <td>
+                                {% if vehiculo.usuario_registro %}
+                                    {{ vehiculo.usuario_registro.get_full_name|default:vehiculo.usuario_registro.username }}
+                                {% else %}
+                                    Sistema
+                                {% endif %}
+                            </td>
                             {% endif %}
-                        </td>
-                        {% endif %}
-                        <td><strong>{{ vehiculo.patente }}</strong></td>
-                        <td>
-                            {% if vehiculo.imagen_base64 %}
-                                <img src="data:image/jpeg;base64,{{ vehiculo.imagen_base64 }}" class="vehiculo-img" alt="Foto del vehículo">
-                            {% else %}
-                                <span class="text-muted">Sin imagen</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ vehiculo.marca }}</td>
-                        <td>{{ vehiculo.modelo }}</td>
-                        <td>{{ vehiculo.numero_motor|default:"-" }}</td>
-                        <td>{{ vehiculo.tipo_bencina|default:"-" }}</td>
-                        <td>{{ vehiculo.color|default:"-" }}</td>
-                        <td>
-                            <a href="{% url 'ver_reporte_vehiculo' vehiculo.id %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-file-earmark-text"></i> Reporte
-                            </a>
-                            
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <td><strong>{{ vehiculo.patente }}</strong></td>
+                            <td>
+                                {% if vehiculo.imagen_base64 %}
+                                    <img src="data:image/jpeg;base64,{{ vehiculo.imagen_base64 }}" class="vehiculo-img" alt="Foto del vehículo">
+                                {% else %}
+                                    <span class="text-muted">Sin imagen</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ vehiculo.marca }}</td>
+                            <td>{{ vehiculo.modelo }}</td>
+                            <td>{{ vehiculo.numero_motor|default:"-" }}</td>
+                            <td>{{ vehiculo.tipo_bencina|default:"-" }}</td>
+                            <td>{{ vehiculo.color|default:"-" }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'ver_reporte_vehiculo' vehiculo.id %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-file-earmark-text"></i> Reporte
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- [Misma paginación que antes] -->
+            <!-- PAGINACIÓN -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.fecha_inicio %}&fecha_inicio={{ request.GET.fecha_inicio }}{% endif %}{% if request.GET.fecha_fin %}&fecha_fin={{ request.GET.fecha_fin }}{% endif %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
         {% else %}
             <div class="no-results">
                 <i class="bi bi-car-front" style="font-size: 3rem; opacity: 0.3;"></i>
@@ -404,18 +356,47 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // Función para búsqueda en tiempo real (opcional)
     document.addEventListener('DOMContentLoaded', function() {
+        // ===== Buscador en tiempo real SOLO por Patente =====
         const buscador = document.querySelector('input[name="buscar"]');
-        if (buscador) {
-            buscador.addEventListener('keyup', function() {
-                const filtro = this.value.toLowerCase();
-                const filas = document.querySelectorAll("#vehiculosTable tbody tr");
-                
-                filas.forEach(fila => {
-                    const patente = fila.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                    fila.style.display = patente.includes(filtro) ? "" : "none";
+        const table = document.getElementById('vehiculosTable');
+        if (buscador && table) {
+            // Encontrar índice de la columna "Patente" de forma robusta (cambia si hay columna de "Registrado por")
+            let patenteIndex = -1;
+            const ths = table.querySelectorAll('thead th');
+            ths.forEach((th, i) => {
+                if (th.textContent.trim().toLowerCase() === 'patente') {
+                    patenteIndex = i; // índice basado en celdas (0-based)
+                }
+            });
+
+            if (patenteIndex >= 0) {
+                buscador.addEventListener('input', function() {
+                    const filtro = this.value.trim().toLowerCase();
+                    const filas = table.querySelectorAll('tbody tr');
+                    filas.forEach(fila => {
+                        const celdas = fila.querySelectorAll('td');
+                        const celdaPatente = celdas[patenteIndex];
+                        const texto = celdaPatente ? celdaPatente.textContent.trim().toLowerCase() : '';
+                        fila.style.display = texto.includes(filtro) ? '' : 'none';
+                    });
                 });
+            }
+        }
+
+        // ===== Validación de fechas (inicio <= fin) =====
+        const fechaInicio = document.querySelector('input[name="fecha_inicio"]');
+        const fechaFin = document.querySelector('input[name="fecha_fin"]');
+        if (fechaInicio && fechaFin) {
+            fechaInicio.addEventListener('change', function() {
+                if (this.value && fechaFin.value && this.value > fechaFin.value) {
+                    fechaFin.value = this.value;
+                }
+            });
+            fechaFin.addEventListener('change', function() {
+                if (this.value && fechaInicio.value && this.value < fechaInicio.value) {
+                    this.value = fechaInicio.value;
+                }
             });
         }
     });
