@@ -31,7 +31,13 @@ SECRET_KEY = 'django-insecure-lv!s0_=6@6ju)sbs7$afmsy!gvry!896rh!669^b$u540$(-_t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []  # O el dominio que te dé Railway
+# ALLOWED_HOSTS = []  # O el dominio que te dé Railway
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'registrocheck-production.up.railway.app',
+]
+
 
 
 LOGIN_URL = 'login'
