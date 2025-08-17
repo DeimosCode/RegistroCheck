@@ -6,7 +6,7 @@ from .models import (
     DetalleTransmision, PuntoTransmision,
     DetalleFrenos, PuntoFrenos,
     DetalleDireccionSuspension, PuntoDireccionSuspension,
-    ImagenTexto,
+    ImagenTexto,Empresa
 )
 
 # Inline para mostrar preview de imagen en cada Punto
@@ -138,3 +138,11 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
     list_select_related = ('usuario', 'empresa')
     search_fields = ('usuario__username', 'empresa__nombre')
     list_filter = ('cargo', 'empresa')
+
+
+
+@admin.register(Empresa)
+class EmpresaAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nombre')  # columnas visibles en el listado
+    search_fields = ('nombre',)      # barra de búsqueda por nombre
+
