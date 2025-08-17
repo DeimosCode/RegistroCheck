@@ -1,0 +1,356 @@
+{% load static %}
+{% load my_filters %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Detalle del Motor - {{ vehiculo.marca }} {{ vehiculo.modelo }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="{% static 'img/logo2.png' %}" type="image/png">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0765CB;
+            --primary-dark: #04239A;
+            --secondary-color: #FFC107;
+            --secondary-dark: #FFA000;
+            --accent-color: #E74C3C;
+            --light-gray: #F8F9FA;
+            --dark-gray: #212529;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        body {
+            background-color: var(--light-gray);
+            padding-top: 4.5rem;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 0.5rem 1rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand img {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .navbar-brand span {
+            font-weight: 700;
+            color: white;
+            margin-left: 10px;
+            font-size: 1.4rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            color: white !important;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            background: white;
+            overflow: hidden;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            margin-top: 2rem;
+            padding: 2rem;
+        }
+
+        .main-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .section-card {
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.8rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+        }
+
+        .section-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .badge-good { background-color: #2ecc71; }
+        .badge-regular { background-color: #f39c12; }
+        .badge-bad { background-color: #e74c3c; }
+        .badge-na { background-color: #95a5a6; }
+
+        .camera-preview, .captured-image {
+            border-radius: 8px;
+            max-width: 100%;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .camera-container { position: relative; margin-bottom: 10px; }
+
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .camera-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .camera-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 10px 25px;
+            font-weight: 600;
+            border-radius: 0.7rem;
+            transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(7, 101, 203, 0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top px-3">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <img src="{% static 'img/logo2.png' %}" alt="Moster Check">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <i class="bi bi-list text-white" style="font-size: 1.8rem;"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            </ul>
+            <form method="post" action="{% url 'logout' %}" class="d-flex">
+                {% csrf_token %}
+                <button class="btn btn-outline-light rounded-pill px-3" type="submit">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- CONTENIDO -->
+<div class="container mt-5">
+    <div class="main-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-gear-fill text-primary"></i> Inspección del Motor</h2>
+                <p class="text-muted mb-0">{{ vehiculo.marca }} {{ vehiculo.modelo }} - {{ vehiculo.ano }}</p>
+            </div>
+            <div>
+                <span class="badge bg-secondary p-2">VIN: {{ vehiculo.vin|default:"N/A" }}</span>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for clave, label in puntos_motor %}
+            <div class="section-card">
+                <h5 class="section-title">
+                    <i class="bi bi-tools me-2"></i> {{ label }}
+                    {% with punto=puntos|dict_get:clave %}
+                        {% if punto %}
+                        <span class="status-badge 
+                            {% if punto.estado == 'BUENO' %}badge-good
+                            {% elif punto.estado == 'REVISION' %}badge-regular
+                            {% elif punto.estado == 'RECHAZADO' %}badge-bad
+                            {% else %}badge-na{% endif %} float-end">
+                            {{ punto.get_estado_display }}
+                        </span>
+                        {% endif %}
+                    {% endwith %}
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="estado_{{ clave }}" class="form-label fw-bold">Estado:</label>
+                        <select class="form-select" name="estado_{{ clave }}" id="estado_{{ clave }}" required>
+                            <option value="" disabled selected>Seleccione el estado</option>
+                            <option value="BUENO" {% with punto=puntos|dict_get:clave %}{% if punto and punto.estado == 'BUENO' %}selected{% endif %}{% endwith %}>Bueno</option>
+                            <option value="REVISION" {% with punto=puntos|dict_get:clave %}{% if punto and punto.estado == 'REVISION' %}selected{% endif %}{% endwith %}>En Revisión</option>
+                            <option value="RECHAZADO" {% with punto=puntos|dict_get:clave %}{% if punto and punto.estado == 'RECHAZADO' %}selected{% endif %}{% endwith %}>Rechazado</option>
+                        </select>
+                        <textarea class="form-control mt-2" name="observaciones_{{ clave }}" id="observaciones_{{ clave }}" rows="2">{% with punto=puntos|dict_get:clave %}{{ punto.observacion|default:"" }}{% endwith %}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="camera-container">
+                            <button type="button" class="btn btn-sm btn-secondary image-toggle-btn" onclick="toggleCamera('{{ clave }}')"><i class="bi bi-camera-fill"></i></button>
+                            <video id="video_{{ clave }}" class="camera-preview" style="display:none;"></video>
+                            <img id="preview_{{ clave }}" class="captured-image"
+                            {% with punto=puntos|dict_get:clave %}
+                                {% if punto and punto.imagen_base64 %}
+                                    src="data:image/jpeg;base64,{{ punto.imagen_base64 }}" style="display:block;"
+                                {% else %}
+                                    style="display:none;"
+                                {% endif %}
+                            {% endwith %}>
+                            <div class="camera-controls" id="controls_{{ clave }}" style="display:none;">
+                                <button type="button" class="camera-btn" onclick="rotateCamera('{{ clave }}', 90)"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                <button type="button" class="camera-btn" onclick="capturarImagen('{{ clave }}')"><i class="bi bi-camera"></i></button>
+                                <button type="button" class="camera-btn" onclick="rotateCamera('{{ clave }}', -90)"><i class="bi bi-arrow-clockwise"></i></button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="imagen_{{ clave }}" id="imagen_{{ clave }}" value="">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'listar_vehiculos' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left-circle me-2"></i> Volver</a>
+                <button type="submit" class="btn btn-save"><i class="bi bi-save me-2"></i> Guardar Inspección</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const streams = {};
+let currentRotation = {};
+
+function iniciarCamara() {
+    {% for clave, label in puntos_motor %}
+        currentRotation['{{ clave }}'] = 0;
+        {% with punto=puntos|dict_get:clave %}
+            {% if not punto or not punto.imagen %}
+                initCameraForSection('{{ clave }}');
+            {% endif %}
+        {% endwith %}
+    {% endfor %}
+}
+
+function initCameraForSection(clave) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: {ideal:1280}, height:{ideal:720} }})
+    .then(stream => {
+        const video = document.getElementById('video_' + clave);
+        streams[clave] = stream;
+        video.srcObject = stream;
+        video.play().catch(err => console.error(err));
+    }).catch(err => { console.error(err); alert("No se pudo acceder a la cámara."); });
+}
+
+function toggleCamera(clave) {
+    const video = document.getElementById('video_' + clave);
+    const preview = document.getElementById('preview_' + clave);
+    const controls = document.getElementById('controls_' + clave);
+
+    if (video.style.display === 'none' || video.style.display === '') {
+        video.style.display = 'block';
+        preview.style.display = 'none';
+        controls.style.display = 'flex';
+        if (!streams[clave]) initCameraForSection(clave);
+    } else {
+        video.style.display = 'none';
+        preview.style.display = 'block';
+        controls.style.display = 'none';
+    }
+}
+
+function capturarImagen(clave) {
+    const video = document.getElementById('video_' + clave);
+    const preview = document.getElementById('preview_' + clave);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (currentRotation[clave] % 180 === 0) {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    } else {
+        canvas.width = video.videoHeight; canvas.height = video.videoWidth;
+    }
+
+    ctx.save();
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(currentRotation[clave]*Math.PI/180);
+    ctx.drawImage(video, -video.videoWidth/2, -video.videoHeight/2, video.videoWidth, video.videoHeight);
+    ctx.restore();
+
+    const dataURL = canvas.toDataURL('image/jpeg',0.8);
+    preview.src = dataURL; preview.style.display='block';
+    video.style.display='none'; document.getElementById('controls_'+clave).style.display='none';
+    document.getElementById('imagen_'+clave).value = dataURL.split(',')[1];
+}
+
+function rotateCamera(clave,degrees){ currentRotation[clave]=(currentRotation[clave]+degrees)%360; document.getElementById('video_'+clave).style.transform=`rotate(${currentRotation[clave]}deg)`; }
+
+window.addEventListener('beforeunload',()=>{ for(const c in streams) if(streams[c]) streams[c].getTracks().forEach(t=>t.stop()); });
+document.addEventListener('DOMContentLoaded', iniciarCamara);
+</script>
+
+</body>
+</html>

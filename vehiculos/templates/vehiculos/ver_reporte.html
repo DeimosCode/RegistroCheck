@@ -1,0 +1,824 @@
+{% load static %}
+{% load my_filters %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte del Vehículo | Moster Check</title>
+    <link rel="icon" href="{% static 'img/logo2.png' %}" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Reporte detallado del vehículo">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Íconos Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Fuente Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Para generación de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0765CB;
+            --primary-dark: #04239A;
+            --secondary-color: #FFC107;
+            --secondary-dark: #FFA000;
+            --light-gray: #F8F9FA;
+            --dark-gray: #212529;
+            --success-color: #28A745;
+            --danger-color: #DC3545;
+            --info-color: #0DCAF0;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            padding-top: 4.5rem;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* ======== Navbar ======== */
+         .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 0.5rem 1rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand img {
+            height: 60px; /* Tamaño aumentado del logo */
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .navbar-brand span {
+            font-weight: 700;
+            color: white;
+            margin-left: 10px;
+            font-size: 1.4rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            color: white !important; /* Texto blanco forzado */
+        }
+
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+            color: white; /* Iconos blancos */
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            font-weight: 600;
+            color: var(--secondary-color) !important;
+        }
+
+        /* ======== Contenido Principal ======== */
+        .main-container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .page-title {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+
+        .section-title {
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+        }
+
+        .section-title i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+
+        /* ======== Imágenes ======== */
+        .vehiculo-img {
+            max-width: 100%;
+            border-radius: 0.8rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .detalle-img {
+            width: 100px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* ======== Listas y Tablas ======== */
+        .list-group-item {
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem !important;
+            transition: all 0.2s ease;
+        }
+
+        .list-group-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* ======== Estados ======== */
+        .estado-ok {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .estado-revision {
+            color: var(--secondary-dark);
+            font-weight: 600;
+        }
+
+        .estado-rechazado {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        /* ======== Botones ======== */
+        .btn {
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn i {
+            margin-right: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(7, 101, 203, 0.2);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #0aa2c0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(13, 202, 240, 0.2);
+            color: white;
+        }
+
+        .btn-outline-danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .btn-outline-danger:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        /* ======== Badges ======== */
+        .badge {
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .status-info {
+            font-size: 0.85rem;
+            color: var(--dark-gray);
+            opacity: 0.8;
+            margin-left: 0.5rem;
+        }
+
+        /* Estilos para el resumen de puntos */
+        .summary-card {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border: 1px solid rgba(7, 101, 203, 0.1);
+        }
+        
+        .punto-card {
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        
+        .punto-card.bueno {
+            border-left-color: var(--success-color);
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        .punto-card.revision {
+            border-left-color: var(--secondary-dark);
+            background-color: rgba(255, 193, 7, 0.05);
+        }
+        
+        .punto-card.rechazado {
+            border-left-color: var(--danger-color);
+            background-color: rgba(220, 53, 69, 0.05);
+        }
+        
+        .punto-img-thumb {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #dee2e6;
+        }
+        
+        .progress {
+            border-radius: 10px;
+        }
+
+        /* ======== Responsive ======== */
+        @media (max-width: 768px) {
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .btn-responsive {
+                width: 100%;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+            }
+            
+            .status-info {
+                display: block;
+                margin-left: 0;
+                margin-top: 0.25rem;
+            }
+        }
+       
+    </style>
+    
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top px-3">
+    <div class="container-fluid">
+        <!-- LOGO -->
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <img src="{% static 'img/logo2.png' %}" alt="Moster Check" class="img-fluid">
+        </a>
+
+        <!-- Menú -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'agregar_vehiculo' %}">
+                        <i class="bi bi-plus-circle"></i> Registrar Vehiculo
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_vehiculos' %}">
+                        <i class="bi bi-car-front"></i> Lista Vehiculo
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Cerrar sesión -->
+            <form method="post" action="{% url 'logout' %}" class="d-flex">
+                {% csrf_token %}
+                <button class="btn btn-outline-light rounded-pill px-3" type="submit">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- CONTENIDO -->
+<div class="container">
+    <div class="main-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title"><i class="bi bi-file-earmark-text"></i> Reporte del Vehículo</h1>
+            <div>
+                <span class="badge bg-primary">ID: {{ vehiculo.id }}</span>
+                <span class="badge bg-secondary ms-2">{{ vehiculo.fecha_registro|date:"d/m/Y" }}</span>
+            </div>
+        </div>
+
+        <!-- Información básica del vehículo -->
+        <div class="row gy-4 align-items-center mb-5">
+            <div class="col-md-4">
+                {% if vehiculo.imagen_base64 %}
+                    <img src="data:image/jpeg;base64,{{ vehiculo.imagen_base64 }}" alt="Vehículo" class="vehiculo-img" />
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 200px;">
+                        <p class="text-muted fst-italic mb-0">No hay imagen disponible</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-8">
+                <ul class="list-group shadow-sm">
+                    <li class="list-group-item"><strong>Orden:</strong> #{{ vehiculo.numero_orden }}</li>
+                    <li class="list-group-item"><strong>Patente:</strong> <span class="badge bg-dark">{{ vehiculo.patente }}</span></li>
+                    <li class="list-group-item"><strong>Marca:</strong> {{ vehiculo.marca }}</li>
+                    <li class="list-group-item"><strong>Modelo:</strong> {{ vehiculo.modelo }}</li>
+                    <li class="list-group-item"><strong>Color:</strong> {{ vehiculo.color }}</li>
+                    <li class="list-group-item"><strong>N° Motor:</strong> {{ vehiculo.numero_motor|default:"-" }}</li>
+                    <li class="list-group-item"><strong>Tipo Combustible:</strong> {{ vehiculo.tipo_bencina|default:"-" }}</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sección de Resumen General -->
+        <div class="summary-card mb-4 p-4 border rounded-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0"><i class="bi bi-card-checklist"></i> Resumen General</h3>
+                <button id="generatePdf" class="btn btn-danger">
+                    <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                </button>
+            </div>
+            
+            <div class="row">
+                <!-- Tarjeta de estado general dinámica -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-speedometer2"></i> Estado General</h5>
+                            {% with total_puntos=vehiculo.get_total_puntos aprobados=vehiculo.get_puntos_aprobados %}
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: {% widthratio aprobados total_puntos 100 %}%"></div>
+                            </div>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> {{ aprobados }} puntos aprobados</li>
+                                <li><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> {{ vehiculo.get_puntos_revision }} en revisión</li>
+                                <li><i class="bi bi-x-circle-fill text-danger me-2"></i> {{ vehiculo.get_puntos_rechazados }} rechazados</li>
+                            </ul>
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de sistemas con estados dinámicos -->
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-list-check"></i> Sistemas</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for sistema in vehiculo.get_sistemas %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ sistema.nombre }}
+                                    <span class="badge bg-{{ sistema.estado_color }}">{{ sistema.estado }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Puntos Detallados -->
+        <div class="mb-5">
+            <h3 class="section-title mb-4"><i class="bi bi-list-task"></i> Detalle de Puntos</h3>
+        </div>
+
+        <div class="table-responsive mb-5">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 30%">Sistema</th>
+                        <th style="width: 20%">Estado</th>
+                        <th style="width: 30%">Detalles</th>
+                        <th style="width: 20%">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Motor -->
+                    <tr>
+                        <td>
+                            <i class="bi bi-gear me-2"></i> Motor
+                        </td>
+                        <td>
+                            {% if detalle_motor %}
+                                <span class="badge bg-success">Registrado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle_motor %}
+                                <small class="text-muted">
+                                    <i class="bi bi-person-check me-1"></i> {{ detalle_motor.usuario.get_full_name|default:detalle_motor.usuario.username }}<br>
+                                    <i class="bi bi-calendar me-1"></i> {{ detalle_motor.fecha_revision|date:"d/m/Y H:i" }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted">No hay registro</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_motor' vehiculo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% if detalle_motor %}Editar{% else %}Registrar{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Transmisión -->
+                    <tr>
+                        <td>
+                            <i class="bi bi-gear-wide-connected me-2"></i> Transmisión
+                        </td>
+                        <td>
+                            {% if detalle_transmision %}
+                                <span class="badge bg-success">Registrado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle_transmision %}
+                                <small class="text-muted">
+                                    <i class="bi bi-person-check me-1"></i> {{ detalle_transmision.usuario.get_full_name|default:detalle_transmision.usuario.username }}<br>
+                                    <i class="bi bi-calendar me-1"></i> {{ detalle_transmision.fecha_revision|date:"d/m/Y H:i" }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted">No hay registro</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_transmision' vehiculo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% if detalle_transmision %}Editar{% else %}Registrar{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Frenos -->
+                    <tr>
+                        <td>
+                            <i class="bi bi-stop-circle me-2"></i> Frenos
+                        </td>
+                        <td>
+                            {% if detalle_frenos %}
+                                <span class="badge bg-success">Registrado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle_frenos %}
+                                <small class="text-muted">
+                                    <i class="bi bi-person-check me-1"></i> {{ detalle_frenos.usuario.get_full_name|default:detalle_frenos.usuario.username }}<br>
+                                    <i class="bi bi-calendar me-1"></i> {{ detalle_frenos.fecha_revision|date:"d/m/Y H:i" }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted">No hay registro</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'agregar_detalle_frenos' vehiculo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% if detalle_frenos %}Editar{% else %}Registrar{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Dirección y Suspensión -->
+                    <tr>
+                        <td>
+                            <i class="bi bi-sliders me-2"></i> Dirección/Suspensión
+                        </td>
+                        <td>
+                            {% if detalle_direccion_suspension %}
+                                <span class="badge bg-success">Registrado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle_direccion_suspension %}
+                                <small class="text-muted">
+                                    <i class="bi bi-person-check me-1"></i> {{ detalle_direccion_suspension.usuario.get_full_name|default:detalle_direccion_suspension.usuario.username }}<br>
+                                    <i class="bi bi-calendar me-1"></i> {{ detalle_direccion_suspension.fecha_revision|date:"d/m/Y H:i" }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted">No hay registro</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_direccion_suspension' vehiculo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% if detalle_direccion_suspension %}Editar{% else %}Registrar{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Carrocería -->
+                    <tr>
+                        <td>
+                            <i class="bi bi-car-front me-2"></i> Carrocería
+                        </td>
+                        <td>
+                            {% if detalle_carroceria %}
+                                <span class="badge bg-success">Registrado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle_carroceria %}
+                                <small class="text-muted">
+                                    <i class="bi bi-person-check me-1"></i> {{ detalle_carroceria.usuario.get_full_name|default:detalle_carroceria.usuario.username }}<br>
+                                    <i class="bi bi-calendar me-1"></i> {{ detalle_carroceria.fecha_revision|date:"d/m/Y H:i" }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted">No hay registro</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_carroceria' vehiculo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% if detalle_carroceria %}Editar{% else %}Registrar{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Revisión General -->
+                    <tr>
+                        <td>
+                            <i class="bi bi-clipboard-check me-2"></i> Revisión General
+                        </td>
+                        <td>
+                            {% if detalle_revision_general %}
+                                <span class="badge bg-success">Registrado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle_revision_general %}
+                                <small class="text-muted">
+                                    <i class="bi bi-person-check me-1"></i> {{ detalle_revision_general.usuario.get_full_name|default:detalle_revision_general.usuario.username }}<br>
+                                    <i class="bi bi-calendar me-1"></i> {{ detalle_revision_general.fecha_revision|date:"d/m/Y H:i" }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted">No hay registro</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_revision_general' vehiculo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% if detalle_revision_general %}Editar{% else %}Registrar{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Interior -->
+                    <tr>
+                        <td>
+                            <i class="bi bi-cup-hot me-2"></i> Interior
+                        </td>
+                        <td>
+                            {% if detalle_interior %}
+                                <span class="badge bg-success">Registrado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle_interior %}
+                                <small class="text-muted">
+                                    <i class="bi bi-person-check me-1"></i> {{ detalle_interior.usuario.get_full_name|default:detalle_interior.usuario.username }}<br>
+                                    <i class="bi bi-calendar me-1"></i> {{ detalle_interior.fecha_revision|date:"d/m/Y H:i" }}
+                                </small>
+                            {% else %}
+                                <small class="text-muted">No hay registro</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detalle_interior' vehiculo.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% if detalle_interior %}Editar{% else %}Registrar{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <br>
+        <br>
+
+           <!-- Sección de Puntos Detallados -->
+        <div class="mb-5">
+            <h3 class="section-title mb-4"><i class="bi bi-list-task"></i> Detalle avanzados</h3>
+            
+        {% for sistema in vehiculo.get_sistemas_con_puntos %}
+            <div class="mb-4">
+                <h4><i class="bi bi-{{ sistema.icono }}"></i> {{ sistema.nombre }}</h4>
+                <div class="row">
+                    {% for punto in sistema.puntos %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card punto-card {{ punto.estado|lower }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">{{ punto.nombre }}</h5>
+                                    <span class="badge bg-{{ punto.estado_color }}">{{ punto.get_estado_display }}</span>
+                                </div>
+                                <p class="card-text">{{ punto.observacion|default:"Sin observaciones" }}</p>
+                                {% if punto.imagen_base64 %}
+                                <img src="data:image/jpeg;base64,{{ punto.imagen_base64 }}" 
+                                     class="punto-img-thumb" 
+                                     data-bs-toggle="modal" 
+                                     data-bs-target="#imagenModal"
+                                     data-img-src="data:image/jpeg;base64,{{ punto.imagen_base64 }}">
+                                {% endif %}
+                                <small class="text-muted d-block mt-2">
+                                    Revisado por: {{ punto.usuario.get_full_name|default:punto.usuario.username }}
+                                    el {{ punto.fecha_registro|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+
+
+        <!-- Modal para imágenes -->
+        <div class="modal fade" id="imagenModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Imagen del punto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="modalImagen" src="" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensajes -->
+        {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Configuración para el modal de imágenes
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal de imágenes
+        var imagenModal = document.getElementById('imagenModal');
+        if (imagenModal) {
+            imagenModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var imgSrc = button.getAttribute('data-img-src');
+                var modalImg = imagenModal.querySelector('#modalImagen');
+                modalImg.src = imgSrc;
+            });
+        }
+
+        // Generación de PDF
+        document.getElementById('generatePdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm'
+            });
+            
+            // Captura el HTML como imagen
+            html2canvas(document.querySelector('.main-container')).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = doc.internal.pageSize.getWidth() - 20;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                doc.save('reporte_vehiculo_{{ vehiculo.patente }}.pdf');
+            });
+        });
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+document.getElementById('generatePdf').addEventListener('click', function () {
+    const element = document.querySelector('.main-container');
+
+    const opt = {
+        margin: [15, 15, 15, 15], // Márgenes equilibrados
+        filename: 'reporte_vehiculo_{{ vehiculo.patente }}.pdf',
+        image: {
+            type: 'jpeg',
+            quality: 1 // Calidad máxima
+        },
+        html2canvas: {
+            scale: 2, // Aumenta la nitidez
+            scrollY: 0,
+            letterRendering: true,
+            useCORS: true
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a3',
+            orientation: 'portrait'
+        },
+        pagebreak: {
+            mode: ['avoid-all', 'css', 'legacy'], // Evita cortes bruscos
+            before: '.page-break'
+        }
+    };
+
+    // Estilos temporales para mejorar el aspecto
+    const originalStyles = document.createElement('style');
+    originalStyles.innerHTML = `
+        .main-container * {
+            font-size: 10pt !important;
+            line-height: 1.4 !important;
+            page-break-inside: avoid !important;
+        }
+        table, tr, td, th {
+            page-break-inside: avoid !important;
+            page-break-before: auto !important;
+            page-break-after: auto !important;
+        }
+        img {
+            page-break-inside: avoid !important;
+        }
+    `;
+    document.head.appendChild(originalStyles);
+
+    html2pdf().set(opt).from(element).save().finally(() => {
+        document.head.removeChild(originalStyles);
+    });
+});
+
+</script>
+</body>
+</html>

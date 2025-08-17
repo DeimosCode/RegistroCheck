@@ -1,0 +1,447 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Moster Check</title>
+    <link rel="icon" href="{% static 'img/logo2.png' %}" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Sistema profesional de gestión y registro de vehículos">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Íconos Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Fuente Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0765CB;
+            --primary-dark: #04239A;
+            --secondary-color: #FFC107;
+            --secondary-dark: #FFA000;
+            --light-gray: #F8F9FA;
+            --dark-gray: #212529;
+            --success-color: #28A745;
+            --danger-color: #DC3545;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            padding-top: 4.5rem;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* ======== Navbar ======== */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 0.5rem 1rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand img {
+            height: 60px; /* Tamaño aumentado del logo */
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .navbar-brand span {
+            font-weight: 700;
+            color: white;
+            margin-left: 10px;
+            font-size: 1.4rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            color: white !important; /* Texto blanco forzado */
+        }
+
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+            color: white; /* Iconos blancos */
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            font-weight: 600;
+            color: var(--secondary-color) !important;
+        }
+
+        /* ======== Card Principal ======== */
+        .main-card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            background: white;
+            overflow: hidden;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            margin-top: 2rem;
+        }
+
+        .main-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 1.5rem;
+            border-bottom: none;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            font-weight: 400;
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* ======== Gráfico ======== */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin: 2rem 0;
+            background: white;
+            border-radius: 0.8rem;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: var(--dark-gray);
+            font-size: 1.3rem;
+            margin: 0;
+        }
+
+        /* ======== Botones ======== */
+        .btn-action {
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 0.8rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: none;
+            margin: 0.5rem 0;
+        }
+
+        .btn-action i {
+            margin-right: 10px;
+            font-size: 1.3rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(7, 101, 203, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            color: var(--dark-gray);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
+            color: var(--dark-gray);
+        }
+
+        /* ======== Stats ======== */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 0.8rem;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        /* ======== Footer ======== */
+        .footer {
+            background: var(--dark-gray);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .footer-logo {
+            height: 50px; /* Tamaño aumentado en footer */
+            margin-bottom: 1rem;
+        }
+
+        /* ======== Animaciones ======== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animated-card {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top px-3">
+    <div class="container-fluid">
+        <!-- LOGO + Nombre -->
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <img src="{% static 'img/logo2.png' %}" alt="Moster Check" class="img-fluid">
+        </a>
+
+        <!-- Toggle -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-list text-white" style="font-size: 1.8rem;"></i>
+        </button>
+
+        <!-- Menú -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'agregar_vehiculo' %}">
+                        <i class="bi bi-plus-circle"></i> Registrar Vehiculo
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_vehiculos' %}">
+                        <i class="bi bi-car-front"></i> Lista Vehiculo
+                    </a>
+                </li>
+               
+            </ul>
+
+            <!-- Cerrar sesión -->
+            <form method="post" action="{% url 'logout' %}" class="d-flex">
+                {% csrf_token %}
+                <button class="btn btn-outline-light rounded-pill px-3" type="submit">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- CONTENIDO -->
+<div class="container">
+    <!-- Card Principal -->
+    <div class="main-card animated-card">
+        <div class="card-header">
+            <h1 class="card-title">Panel de Control</h1>
+            <p class="card-subtitle">Sistema de Gestión de Flota Automotriz</p>
+        </div>
+        <div class="card-body">
+            <!-- Estadísticas -->
+            <div class="stats-container">
+                <div class="stat-card animated-card delay-1">
+                    <i class="bi bi-car-front-fill" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <div class="stat-value">142</div>
+                    <div class="stat-label">Vehículos Registrados</div>
+                </div>
+                <div class="stat-card animated-card delay-2">
+                    <i class="bi bi-calendar-check" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Revisiones Hoy</div>
+                </div>
+                <div class="stat-card animated-card delay-3">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: var(--danger-color);"></i>
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Mantenimientos Pendientes</div>
+                </div>
+            </div>
+
+            <!-- Gráfico -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Registro de Vehículos (Últimos 7 días)</h3>
+                    <span class="badge bg-primary rounded-pill">Actualizado hoy</span>
+                </div>
+                <canvas id="vehiculosPorDia"></canvas>
+            </div>
+
+            <!-- Acciones Principales -->
+            
+        </div>
+    </div>
+</div>
+
+<!-- Mensajes -->
+{% if messages %}
+<div class="container mt-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} me-2"></i>
+            <div>{{ message }}</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <img src="{% static 'img/logo2.png' %}" alt="Moster Check" class="footer-logo">
+        <p class="mb-2">Sistema de Gestión de Registro Automotriz</p>
+        <p class="mb-0">© 2025 DeimosCode. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('vehiculosPorDia').getContext('2d');
+        
+        // Datos de ejemplo - reemplazar con tus datos reales
+        const chartData = {
+            labels: {{ fechas|safe }},
+            datasets: [{
+                label: 'Vehículos registrados',
+                data: {{ cantidades|safe }},
+                backgroundColor: 'rgba(7, 101, 203, 0.7)',
+                borderColor: 'rgba(7, 101, 203, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                fill: true,
+                tension: 0.3
+            }]
+        };
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => ` ${context.parsed.y} vehículos registrados`
+                        },
+                        displayColors: false,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#666' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { 
+                            color: '#666',
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    });
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

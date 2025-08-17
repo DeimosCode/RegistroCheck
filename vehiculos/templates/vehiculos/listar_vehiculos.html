@@ -1,0 +1,424 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Moster Check | Listado de Vehículos</title>
+    <link rel="icon" href="{% static 'img/logo2.png' %}" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Sistema de gestión de vehículos">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Íconos Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Fuente Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0765CB;
+            --primary-dark: #04239A;
+            --secondary-color: #FFC107;
+            --secondary-dark: #FFA000;
+            --light-gray: #F8F9FA;
+            --dark-gray: #212529;
+            --success-color: #28A745;
+            --danger-color: #DC3545;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            padding-top: 4.5rem;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* ======== Navbar ======== */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 0.5rem 1rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand img {
+            height: 60px; /* Tamaño aumentado del logo */
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .navbar-brand span {
+            font-weight: 700;
+            color: white;
+            margin-left: 10px;
+            font-size: 1.4rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            color: white !important; /* Texto blanco forzado */
+        }
+
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+            color: white; /* Iconos blancos */
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            font-weight: 600;
+            color: var(--secondary-color) !important;
+        }
+
+        /* ======== Contenido Principal ======== */
+        .main-container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .page-title {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+
+        /* ======== Filtros ======== */
+        .filter-container {
+            background: #f8f9fa;
+            border-radius: 0.8rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-form .form-control {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .filter-form label {
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 0;
+        }
+
+        /* ======== Tabla ======== */
+        .table-responsive {
+            border-radius: 0.8rem;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: var(--primary-dark);
+            color: white;
+            font-weight: 600;
+            border-bottom: none;
+        }
+
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(7, 101, 203, 0.05);
+        }
+
+        .vehiculo-img {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* ======== Botones ======== */
+        .btn {
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn i {
+            margin-right: 6px;
+        }
+
+        .btn-sm {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(7, 101, 203, 0.2);
+            color: white;
+        }
+
+        .btn-outline-danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .btn-outline-danger:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        /* ======== Paginación ======== */
+        .pagination {
+            margin-top: 2rem;
+        }
+
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .page-link {
+            color: var(--primary-color);
+            border-radius: 0.5rem !important;
+            margin: 0 0.25rem;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .page-link:hover {
+            color: var(--primary-dark);
+            background-color: rgba(7, 101, 203, 0.1);
+        }
+
+        /* ======== Mensajes ======== */
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: var(--dark-gray);
+            opacity: 0.7;
+        }
+
+        /* ======== Responsive ======== */
+        @media (max-width: 768px) {
+            .filter-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-form .form-control {
+                width: 100% !important;
+                max-width: none !important;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .vehiculo-img {
+                width: 60px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top px-3">
+    <div class="container-fluid">
+        <!-- LOGO -->
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <img src="{% static 'img/logo2.png' %}" alt="Moster Check" class="img-fluid">
+        </a>
+
+        <!-- Menú -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'agregar_vehiculo' %}">
+                        <i class="bi bi-plus-circle"></i> Registrar Vehículo
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Cerrar sesión -->
+            <form method="post" action="{% url 'logout' %}" class="d-flex">
+                {% csrf_token %}
+                <button class="btn btn-outline-light rounded-pill px-3" type="submit">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- CONTENIDO -->
+<div class="container">
+    <div class="main-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title"><i class="bi bi-car-front"></i> Listado de Vehículos</h1>
+            {% if es_admin_jefe %}
+                <span class="badge bg-primary">Vista de Administrador</span>
+            {% endif %}
+        </div>
+
+        <!-- BUSCADOR -->
+        <div class="filter-container">
+            <form method="get" class="filter-form">
+                <!-- [Mismo formulario de búsqueda] -->
+            </form>
+        </div>
+
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="vehiculosTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        {% if es_admin_jefe %}<th>Registrado por</th>{% endif %}
+                        <th>Patente</th>
+                        <th>Imagen</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Motor</th>
+                        <th>Combustible</th>
+                        <th>Color</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehiculo in page_obj %}
+                    <tr>
+                        <td>{{ vehiculo.id }}</td>
+                        <td>{{ vehiculo.fecha_registro|date:"d/m/Y" }}</td>
+                        {% if es_admin_jefe %}
+                        <td>
+                            {% if vehiculo.usuario_registro %}
+                                {{ vehiculo.usuario_registro.get_full_name|default:vehiculo.usuario_registro.username }}
+                            {% else %}
+                                Sistema
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td><strong>{{ vehiculo.patente }}</strong></td>
+                        <td>
+                            {% if vehiculo.imagen_base64 %}
+                                <img src="data:image/jpeg;base64,{{ vehiculo.imagen_base64 }}" class="vehiculo-img" alt="Foto del vehículo">
+                            {% else %}
+                                <span class="text-muted">Sin imagen</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ vehiculo.marca }}</td>
+                        <td>{{ vehiculo.modelo }}</td>
+                        <td>{{ vehiculo.numero_motor|default:"-" }}</td>
+                        <td>{{ vehiculo.tipo_bencina|default:"-" }}</td>
+                        <td>{{ vehiculo.color|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'ver_reporte_vehiculo' vehiculo.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-file-earmark-text"></i> Reporte
+                            </a>
+                            
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- [Misma paginación que antes] -->
+        {% else %}
+            <div class="no-results">
+                <i class="bi bi-car-front" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h5 class="mt-3">No se encontraron vehículos</h5>
+                <p class="text-muted">
+                    {% if es_admin_jefe %}
+                        No hay vehículos registrados con los criterios de búsqueda actuales.
+                    {% else %}
+                        No has registrado ningún vehículo aún.
+                    {% endif %}
+                </p>
+                <a href="{% url 'agregar_vehiculo' %}" class="btn btn-primary mt-2">
+                    <i class="bi bi-plus-circle"></i> Registrar nuevo vehículo
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Función para búsqueda en tiempo real (opcional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const buscador = document.querySelector('input[name="buscar"]');
+        if (buscador) {
+            buscador.addEventListener('keyup', function() {
+                const filtro = this.value.toLowerCase();
+                const filas = document.querySelectorAll("#vehiculosTable tbody tr");
+                
+                filas.forEach(fila => {
+                    const patente = fila.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    fila.style.display = patente.includes(filtro) ? "" : "none";
+                });
+            });
+        }
+    });
+</script>
+</body>
+</html>
