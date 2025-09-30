@@ -604,3 +604,46 @@ def get_sistema_icon(detalle_attr):
         'detalle_interior': 'cup-hot'
     }
     return iconos.get(detalle_attr, 'circle')
+
+
+
+# views.py
+from django.core.mail import EmailMessage
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+
+@csrf_exempt
+def send_pdf_email(request):
+    if request.method == 'POST':
+        try:
+            # Obtener los datos del formulario
+            pdf_file = request.FILES['pdf']
+            email = request.POST['email']
+            subject = request.POST['subject']
+            message = request.POST['message']
+            
+            # Crear el email
+            email_msg = EmailMessage(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,  # Desde
+                [email],  # Para
+            )
+            
+            # Adjuntar el PDF
+            email_msg.attach(
+                pdf_file.name,
+                pdf_file.read(),
+                'application/pdf'
+            )
+            
+            # Enviar el correo
+            email_msg.send()
+            
+            return JsonResponse({'success': True, 'message': 'Correo enviado correctamente'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})

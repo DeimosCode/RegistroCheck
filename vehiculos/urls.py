@@ -19,4 +19,6 @@ urlpatterns = [
     path('vehiculo/<int:id>/detalle_carroceria/', views.agregar_detalle_carroceria, name='detalle_carroceria'),
     path('vehiculo/<int:id>/detalle_revision_general/', views.agregar_detalle_revision_general, name='detalle_revision_general'),
     path('vehiculo/<int:id>/detalle_interior/', views.agregar_detalle_interior, name='detalle_interior'),
+
+    path('send-pdf-email/', views.send_pdf_email, name='send_pdf_email'),
 ]
