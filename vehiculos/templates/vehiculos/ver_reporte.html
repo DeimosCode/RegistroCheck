@@ -22,6 +22,7 @@
     <!-- Para generación de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         :root {
@@ -33,6 +34,7 @@
             --dark-gray: #212529;
             --success-color: #28A745;
             --danger-color: #DC3545;
+            --warning-color: #FFC107;
             --info-color: #0DCAF0;
         }
 
@@ -41,10 +43,15 @@
             padding-top: 4.5rem;
             font-family: 'Montserrat', sans-serif;
             min-height: 100vh;
+            position: relative;
         }
 
+       
+
+        
+
         /* ======== Navbar ======== */
-         .navbar {
+        .navbar {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             padding: 0.5rem 1rem;
@@ -61,17 +68,9 @@
         }
 
         .navbar-brand img {
-            height: 60px; /* Tamaño aumentado del logo */
+            height: 60px;
             width: auto;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-        }
-
-        .navbar-brand span {
-            font-weight: 700;
-            color: white;
-            margin-left: 10px;
-            font-size: 1.4rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .nav-link {
@@ -82,23 +81,18 @@
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            color: white !important; /* Texto blanco forzado */
+            color: white !important;
         }
 
         .nav-link i {
             margin-right: 8px;
             font-size: 1.1rem;
-            color: white; /* Iconos blancos */
+            color: white;
         }
 
         .nav-link:hover, .nav-link.active {
             background-color: rgba(255,255,255,0.15);
             transform: translateY(-2px);
-        }
-
-        .nav-link.active {
-            font-weight: 600;
-            color: var(--secondary-color) !important;
         }
 
         /* ======== Contenido Principal ======== */
@@ -108,6 +102,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             padding: 2rem;
             margin-top: 2rem;
+            position: relative;
         }
 
         .page-title {
@@ -156,27 +151,14 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        /* ======== Listas y Tablas ======== */
-        .list-group-item {
-            border-left: 4px solid var(--primary-color);
-            margin-bottom: 0.5rem;
-            border-radius: 0.5rem !important;
-            transition: all 0.2s ease;
-        }
-
-        .list-group-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
         /* ======== Estados ======== */
-        .estado-ok {
+        .estado-bueno {
             color: var(--success-color);
             font-weight: 600;
         }
 
-        .estado-revision {
-            color: var(--secondary-dark);
+        .estado-observacion {
+            color: var(--warning-color);
             font-weight: 600;
         }
 
@@ -213,26 +195,16 @@
             color: white;
         }
 
-        .btn-info {
-            background: var(--info-color);
+        .btn-danger {
+            background: var(--danger-color);
             border: none;
             color: white;
         }
 
-        .btn-info:hover {
-            background: #0aa2c0;
+        .btn-danger:hover {
+            background: #c82333;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(13, 202, 240, 0.2);
-            color: white;
-        }
-
-        .btn-outline-danger {
-            border-color: var(--danger-color);
-            color: var(--danger-color);
-        }
-
-        .btn-outline-danger:hover {
-            background: var(--danger-color);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
             color: white;
         }
 
@@ -242,13 +214,6 @@
             padding: 0.25rem 0.5rem;
             font-weight: 500;
             font-size: 0.75rem;
-        }
-
-        .status-info {
-            font-size: 0.85rem;
-            color: var(--dark-gray);
-            opacity: 0.8;
-            margin-left: 0.5rem;
         }
 
         /* Estilos para el resumen de puntos */
@@ -268,8 +233,8 @@
             background-color: rgba(40, 167, 69, 0.05);
         }
         
-        .punto-card.revision {
-            border-left-color: var(--secondary-dark);
+        .punto-card.observacion {
+            border-left-color: var(--warning-color);
             background-color: rgba(255, 193, 7, 0.05);
         }
         
@@ -285,10 +250,45 @@
             border-radius: 4px;
             cursor: pointer;
             border: 1px solid #dee2e6;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .image-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
         }
         
         .progress {
             border-radius: 10px;
+        }
+
+        /* Ocultar botón de PDF en impresión */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .navbar {
+                display: none !important;
+            }
+            
+            body {
+                padding-top: 0 !important;
+                background: white !important;
+            }
+            
+            .main-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 1rem !important;
+            }
+            
+            .watermark {
+                opacity: 0.5 !important;
+            }
         }
 
         /* ======== Responsive ======== */
@@ -306,18 +306,12 @@
             .section-title {
                 font-size: 1.1rem;
             }
-            
-            .status-info {
-                display: block;
-                margin-left: 0;
-                margin-top: 0.25rem;
-            }
         }
-       
     </style>
-    
 </head>
 <body>
+
+
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg fixed-top px-3">
@@ -326,6 +320,11 @@
         <a class="navbar-brand" href="{% url 'index' %}">
             <img src="{% static 'img/logo2.png' %}" alt="Moster Check" class="img-fluid">
         </a>
+
+        <!-- Watermark
+        <div class="watermark">
+            <img src="{% static 'img/logo2.png' %}" alt="Moster Check Watermark">
+        </div> -->
 
         <!-- Menú -->
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -356,6 +355,7 @@
 <!-- CONTENIDO -->
 <div class="container">
     <div class="main-container">
+        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="page-title"><i class="bi bi-file-earmark-text"></i> Reporte del Vehículo</h1>
             <div>
@@ -370,7 +370,7 @@
                 {% if vehiculo.imagen_base64 %}
                     <img src="data:image/jpeg;base64,{{ vehiculo.imagen_base64 }}" alt="Vehículo" class="vehiculo-img" />
                 {% else %}
-                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 200px;">
+                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 300px;">
                         <p class="text-muted fst-italic mb-0">No hay imagen disponible</p>
                     </div>
                 {% endif %}
@@ -388,13 +388,17 @@
                 </ul>
             </div>
         </div>
+        <br>
+        <br>
 
         <!-- Sección de Resumen General -->
-        <div class="summary-card mb-4 p-4 border rounded-3 shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="mb-0"><i class="bi bi-card-checklist"></i> Resumen General</h3>
-                <button id="generatePdf" class="btn btn-danger">
-                    <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+            <div class="summary-card mb-4 p-4 border rounded-3 shadow-sm">
+                <div class="d-flex gap-2 mb-3">
+                <button id="generatePdf" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Generar PDF
+                </button>
+                <button id="sendEmail" class="btn btn-success">
+                    <i class="fas fa-envelope"></i> Enviar por Correo
                 </button>
             </div>
             
@@ -404,38 +408,66 @@
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="card-body">
                             <h5 class="card-title"><i class="bi bi-speedometer2"></i> Estado General</h5>
-                            {% with total_puntos=vehiculo.get_total_puntos aprobados=vehiculo.get_puntos_aprobados %}
+                            {% if total_puntos > 0 %}
                             <div class="progress mb-3" style="height: 10px;">
-                                <div class="progress-bar bg-success" style="width: {% widthratio aprobados total_puntos 100 %}%"></div>
+                                <div class="progress-bar bg-success" style="width: {% widthratio puntos_buenos total_puntos 100 %}%"
+                                    title="{{ puntos_buenos }} puntos buenos ({% widthratio puntos_buenos total_puntos 100 %}%)"></div>
+                                <div class="progress-bar bg-warning" style="width: {% widthratio puntos_observacion total_puntos 100 %}%"
+                                    title="{{ puntos_observacion }} puntos con observación ({% widthratio puntos_observacion total_puntos 100 %}%)"></div>
+                                <div class="progress-bar bg-danger" style="width: {% widthratio puntos_rechazados total_puntos 100 %}%"
+                                    title="{{ puntos_rechazados }} puntos rechazados ({% widthratio puntos_rechazados total_puntos 100 %}%)"></div>
                             </div>
                             <ul class="list-unstyled">
-                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> {{ aprobados }} puntos aprobados</li>
-                                <li><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> {{ vehiculo.get_puntos_revision }} en revisión</li>
-                                <li><i class="bi bi-x-circle-fill text-danger me-2"></i> {{ vehiculo.get_puntos_rechazados }} rechazados</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> {{ puntos_buenos }} puntos buenos</li>
+                                <li><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> {{ puntos_observacion }} con observación</li>
+                                <li><i class="bi bi-x-circle-fill text-danger me-2"></i> {{ puntos_rechazados }} rechazados</li>
+                                <li class="mt-2"><strong>Total: {{ total_puntos }} puntos evaluados</strong></li>
                             </ul>
-                            {% endwith %}
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i> No hay puntos registrados. 
+                                <a href="{% url 'detalle_motor' vehiculo.id %}" class="alert-link">Comenzar inspección</a>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 
-                <!-- Lista de sistemas con estados dinámicos -->
+                <!-- Lista de sistemas con estados -->
                 <div class="col-md-6">
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title"><i class="bi bi-list-check"></i> Sistemas</h5>
+                            <h5 class="card-title"><i class="bi bi-list-check"></i> Sistemas Evaluados</h5>
                             <ul class="list-group list-group-flush">
-                                {% for sistema in vehiculo.get_sistemas %}
+                                {% for sistema in sistemas_con_puntos %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ sistema.nombre }}
-                                    <span class="badge bg-{{ sistema.estado_color }}">{{ sistema.estado }}</span>
+                                    <span class="badge bg-primary">{{ sistema.puntos|length }} puntos</span>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted">
+                                    <i class="bi bi-info-circle me-2"></i> No hay sistemas evaluados
                                 </li>
                                 {% endfor %}
                             </ul>
+                            
+                            <!-- Resumen de progreso por sistema -->
+                            {% if sistemas_con_puntos %}
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-check-circle text-success me-1"></i>
+                                    {{ sistemas_con_puntos|length }} de 7 sistemas evaluados
+                                </small>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <br>
+        <br>
 
         <!-- Sección de Puntos Detallados -->
         <div class="mb-5">
@@ -455,9 +487,7 @@
                 <tbody>
                     <!-- Motor -->
                     <tr>
-                        <td>
-                            <i class="bi bi-gear me-2"></i> Motor
-                        </td>
+                        <td><i class="bi bi-gear me-2"></i> Motor</td>
                         <td>
                             {% if detalle_motor %}
                                 <span class="badge bg-success">Registrado</span>
@@ -484,9 +514,7 @@
 
                     <!-- Transmisión -->
                     <tr>
-                        <td>
-                            <i class="bi bi-gear-wide-connected me-2"></i> Transmisión
-                        </td>
+                        <td><i class="bi bi-gear-wide-connected me-2"></i> Transmisión</td>
                         <td>
                             {% if detalle_transmision %}
                                 <span class="badge bg-success">Registrado</span>
@@ -513,9 +541,7 @@
 
                     <!-- Frenos -->
                     <tr>
-                        <td>
-                            <i class="bi bi-stop-circle me-2"></i> Frenos
-                        </td>
+                        <td><i class="bi bi-stop-circle me-2"></i> Frenos</td>
                         <td>
                             {% if detalle_frenos %}
                                 <span class="badge bg-success">Registrado</span>
@@ -542,9 +568,7 @@
 
                     <!-- Dirección y Suspensión -->
                     <tr>
-                        <td>
-                            <i class="bi bi-sliders me-2"></i> Dirección/Suspensión
-                        </td>
+                        <td><i class="bi bi-sliders me-2"></i> Dirección/Suspensión</td>
                         <td>
                             {% if detalle_direccion_suspension %}
                                 <span class="badge bg-success">Registrado</span>
@@ -571,9 +595,7 @@
 
                     <!-- Carrocería -->
                     <tr>
-                        <td>
-                            <i class="bi bi-car-front me-2"></i> Carrocería
-                        </td>
+                        <td><i class="bi bi-car-front me-2"></i> Carrocería</td>
                         <td>
                             {% if detalle_carroceria %}
                                 <span class="badge bg-success">Registrado</span>
@@ -600,9 +622,7 @@
 
                     <!-- Revisión General -->
                     <tr>
-                        <td>
-                            <i class="bi bi-clipboard-check me-2"></i> Revisión General
-                        </td>
+                        <td><i class="bi bi-clipboard-check me-2"></i> Revisión General</td>
                         <td>
                             {% if detalle_revision_general %}
                                 <span class="badge bg-success">Registrado</span>
@@ -629,9 +649,7 @@
 
                     <!-- Interior -->
                     <tr>
-                        <td>
-                            <i class="bi bi-cup-hot me-2"></i> Interior
-                        </td>
+                        <td><i class="bi bi-cup-hot me-2"></i> Interior</td>
                         <td>
                             {% if detalle_interior %}
                                 <span class="badge bg-success">Registrado</span>
@@ -661,44 +679,70 @@
         <br>
         <br>
 
-           <!-- Sección de Puntos Detallados -->
+        <!-- Sección de Detalles Avanzados -->
         <div class="mb-5">
-            <h3 class="section-title mb-4"><i class="bi bi-list-task"></i> Detalle avanzados</h3>
+            <h3 class="section-title mb-4"><i class="bi bi-list-task"></i> Detalles Avanzados</h3>
             
-        {% for sistema in vehiculo.get_sistemas_con_puntos %}
+            {% for sistema in vehiculo.get_sistemas_con_puntos %}
             <div class="mb-4">
-                <h4><i class="bi bi-{{ sistema.icono }}"></i> {{ sistema.nombre }}</h4>
+                <h5 class="mb-3"><i class="bi bi-{{ sistema.icono }} me-2"></i> {{ sistema.nombre }}</h5>
                 <div class="row">
                     {% for punto in sistema.puntos %}
                     <div class="col-md-6 mb-3">
                         <div class="card punto-card {{ punto.estado|lower }}">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <h5 class="card-title">{{ punto.nombre }}</h5>
-                                    <span class="badge bg-{{ punto.estado_color }}">{{ punto.get_estado_display }}</span>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0">{{ punto.get_nombre_display }}</h6>
+                                    <span class="badge 
+                                        {% if punto.estado == 'BUENO' %}bg-success
+                                        {% elif punto.estado == 'OBSERVACION' %}bg-warning
+                                        {% elif punto.estado == 'RECHAZADO' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ punto.get_estado_display }}
+                                    </span>
                                 </div>
-                                <p class="card-text">{{ punto.observacion|default:"Sin observaciones" }}</p>
-                                {% if punto.imagen_base64 %}
-                                <img src="data:image/jpeg;base64,{{ punto.imagen_base64 }}" 
-                                     class="punto-img-thumb" 
-                                     data-bs-toggle="modal" 
-                                     data-bs-target="#imagenModal"
-                                     data-img-src="data:image/jpeg;base64,{{ punto.imagen_base64 }}">
+                                
+                                <p class="card-text small">{{ punto.observacion|default:"Sin observaciones" }}</p>
+                                
+                                <!-- Galería de imágenes del punto -->
+                                {% if punto.imagenes.exists %}
+                                <div class="image-gallery">
+                                    {% for imagen in punto.imagenes.all %}
+                                    <img src="data:image/jpeg;base64,{{ imagen.imagen_base64 }}" 
+                                         class="punto-img-thumb" 
+                                         data-bs-toggle="modal" 
+                                         data-bs-target="#imagenModal"
+                                         data-img-src="data:image/jpeg;base64,{{ imagen.imagen_base64 }}"
+                                         alt="Imagen {{ forloop.counter }}"
+                                         title="Click para ampliar">
+                                    {% endfor %}
+                                </div>
                                 {% endif %}
+                                
                                 <small class="text-muted d-block mt-2">
-                                    Revisado por: {{ punto.usuario.get_full_name|default:punto.usuario.username }}
-                                    el {{ punto.fecha_registro|date:"d/m/Y H:i" }}
+                                    <i class="bi bi-person me-1"></i> {{ punto.usuario.get_full_name|default:punto.usuario.username }}
+                                    <i class="bi bi-calendar ms-2 me-1"></i> {{ punto.fecha_registro|date:"d/m/Y H:i" }}
                                 </small>
                             </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> No hay puntos registrados para este sistema.
                         </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
+            {% empty %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i> No hay sistemas con puntos registrados.
+            </div>
             {% endfor %}
         </div>
 
-
+       
 
         <!-- Modal para imágenes -->
         <div class="modal fade" id="imagenModal" tabindex="-1" aria-hidden="true">
@@ -709,7 +753,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <img id="modalImagen" src="" class="img-fluid">
+                        <img id="modalImagen" src="" class="img-fluid rounded">
                     </div>
                 </div>
             </div>
@@ -729,96 +773,286 @@
     </div>
 </div>
 
+
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // Configuración para el modal de imágenes
-    document.addEventListener('DOMContentLoaded', function() {
-        // Modal de imágenes
-        var imagenModal = document.getElementById('imagenModal');
-        if (imagenModal) {
-            imagenModal.addEventListener('show.bs.modal', function(event) {
-                var button = event.relatedTarget;
-                var imgSrc = button.getAttribute('data-img-src');
-                var modalImg = imagenModal.querySelector('#modalImagen');
-                modalImg.src = imgSrc;
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal de imágenes
+    var imagenModal = document.getElementById('imagenModal');
+    if (imagenModal) {
+        imagenModal.addEventListener('show.bs.modal', function(event) {
+            var button = event.relatedTarget;
+            var imgSrc = button.getAttribute('data-img-src');
+            var modalImg = imagenModal.querySelector('#modalImagen');
+            modalImg.src = imgSrc;
+        });
+    }
+
+    // Función común para generar PDF
+    function generatePDF(callback) {
+        const element = document.querySelector('.main-container');
+        
+        // Crear un wrapper para el contenido y la marca de agua
+        const pdfWrapper = document.createElement('div');
+        pdfWrapper.className = 'pdf-wrapper';
+        pdfWrapper.style.position = 'relative';
+        
+        // Clonar el contenido
+        const contentClone = element.cloneNode(true);
+        
+        // Crear marca de agua dentro del wrapper
+        const watermark = document.createElement('div');
+        watermark.className = 'watermark-pdf-absolute';
+        watermark.innerHTML = "<img src='{% static 'img/logo2.png' %}' alt='Watermark'>";
+        
+        pdfWrapper.appendChild(contentClone);
+        pdfWrapper.appendChild(watermark);
+        
+        // Ocultar temporalmente el original
+        const originalDisplay = element.style.display;
+        element.style.display = 'none';
+        document.body.appendChild(pdfWrapper);
+
+        const opt = {
+            margin: [15, 15, 15, 15],
+            filename: 'reporte_vehiculo_{{ vehiculo.patente }}.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { 
+                scale: 2,
+                scrollY: 0,
+                letterRendering: true,
+                useCORS: true
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a3', 
+                orientation: 'portrait' 
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        // Estilos temporales
+        const originalStyles = document.createElement('style');
+        originalStyles.innerHTML = `
+            .pdf-wrapper {
+                position: relative !important;
+                width: 100% !important;
+            }
+            .watermark-pdf-absolute {
+                position: absolute !important;
+                top: 4% !important;
+                right: 23% !important;
+                transform: translateY(-50%) !important;
+                opacity: 0.1 !important;
+                z-index: 999999 !important;
+                pointer-events: none !important;
+                padding: 40px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            .watermark-pdf-absolute img {
+                width: 400px !important;
+                height: auto !important;
+                filter: grayscale(100%) !important;
+            }
+            .main-container * {
+                font-size: 10pt !important;
+                line-height: 1.4 !important;
+                page-break-inside: avoid !important;
+            }
+            table, tr, td, th {
+                page-break-inside: avoid !important;
+            }
+            img {
+                page-break-inside: avoid !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        `;
+        document.head.appendChild(originalStyles);
+
+        // Si es para descarga directa
+        if (!callback) {
+            html2pdf().set(opt).from(pdfWrapper).save().finally(() => {
+                cleanup(pdfWrapper, element, originalDisplay, originalStyles);
+            });
+        } else {
+            // Si es para email, generar blob
+            html2pdf().set(opt).from(pdfWrapper).toPdf().get('pdf').then(function(pdf) {
+                const pdfBlob = pdf.output('blob');
+                cleanup(pdfWrapper, element, originalDisplay, originalStyles);
+                callback(pdfBlob);
             });
         }
+    }
 
-        // Generación de PDF
-        document.getElementById('generatePdf').addEventListener('click', function() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm'
-            });
+    // Función para limpiar recursos
+    function cleanup(pdfWrapper, element, originalDisplay, originalStyles) {
+        document.head.removeChild(originalStyles);
+        element.style.display = originalDisplay;
+        if (pdfWrapper.parentNode) {
+            pdfWrapper.parentNode.removeChild(pdfWrapper);
+        }
+    }
+
+    // Generación de PDF (descarga)
+    document.getElementById('generatePdf').addEventListener('click', function() {
+        generatePDF(); // Sin callback para descarga directa
+    });
+
+    // Botón Enviar por Correo
+    document.getElementById('sendEmail').addEventListener('click', function() {
+        showEmailModal();
+    });
+
+    // Función para mostrar modal de email COMPLETO
+    function showEmailModal() {
+        const modalHTML = `
+            <div class="modal fade" id="emailModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Enviar PDF por Correo</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="emailForm">
+                                <div class="mb-3">
+                                    <label for="recipientEmail" class="form-label">Correo destinatario</label>
+                                    <input type="email" class="form-control" id="recipientEmail" 
+                                        placeholder="ejemplo@correo.com" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="emailSubject" class="form-label">Asunto</label>
+                                    <input type="text" class="form-control" id="emailSubject" 
+                                        value="Reporte Vehículo {{ vehiculo.patente }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="emailMessage" class="form-label">Mensaje</label>
+                                    <textarea class="form-control" id="emailMessage" rows="3" 
+                                            placeholder="Mensaje opcional..."></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-success" id="sendEmailBtn">
+                                <i class="fas fa-paper-plane"></i> Enviar PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        if (!document.getElementById('emailModal')) {
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        const emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
+        emailModal.show();
+
+        // Enfocar el campo de email automáticamente
+        setTimeout(() => {
+            const emailInput = document.getElementById('recipientEmail');
+            if (emailInput) emailInput.focus();
+        }, 500);
+
+        // Configurar evento del botón enviar
+        document.getElementById('sendEmailBtn').onclick = function() {
+            const email = document.getElementById('recipientEmail').value;
+            const subject = document.getElementById('emailSubject').value;
+            const message = document.getElementById('emailMessage').value;
             
-            // Captura el HTML como imagen
-            html2canvas(document.querySelector('.main-container')).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const imgWidth = doc.internal.pageSize.getWidth() - 20;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                
-                doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-                doc.save('reporte_vehiculo_{{ vehiculo.patente }}.pdf');
+            if (!email) {
+                alert('Por favor ingresa un correo electrónico válido');
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                alert('Por favor ingresa un correo electrónico válido');
+                return;
+            }
+
+            if (!subject) {
+                alert('Por favor ingresa un asunto para el correo');
+                return;
+            }
+
+            sendEmailWithPDF(email, subject, message);
+        };
+    }
+
+    // Función de validación de email
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Función para enviar email con PDF (actualizada con todos los campos)
+    function sendEmailWithPDF(email, subject, message) {
+        // Mostrar loading
+        const sendBtn = document.getElementById('sendEmailBtn');
+        const originalText = sendBtn.innerHTML;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        sendBtn.disabled = true;
+
+        // Usar la función generatePDF con callback
+        generatePDF(function(pdfBlob) {
+            const formData = new FormData();
+            formData.append('pdf', pdfBlob, 'reporte_vehiculo_{{ vehiculo.patente }}.pdf');
+            formData.append('email', email);
+            formData.append('subject', subject);
+            formData.append('message', message);
+
+            // Enviar a backend
+            simulateEmailSend(formData, function(success) {
+                // Restaurar botón
+                sendBtn.innerHTML = originalText;
+                sendBtn.disabled = false;
+
+                if (success) {
+                    alert('✅ PDF enviado correctamente a ' + email);
+                    bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+                } else {
+                    alert('❌ Error al enviar el correo. Intenta nuevamente.');
+                }
             });
         });
-    });
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-document.getElementById('generatePdf').addEventListener('click', function () {
-    const element = document.querySelector('.main-container');
+    }
 
-    const opt = {
-        margin: [15, 15, 15, 15], // Márgenes equilibrados
-        filename: 'reporte_vehiculo_{{ vehiculo.patente }}.pdf',
-        image: {
-            type: 'jpeg',
-            quality: 1 // Calidad máxima
-        },
-        html2canvas: {
-            scale: 2, // Aumenta la nitidez
-            scrollY: 0,
-            letterRendering: true,
-            useCORS: true
-        },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a3',
-            orientation: 'portrait'
-        },
-        pagebreak: {
-            mode: ['avoid-all', 'css', 'legacy'], // Evita cortes bruscos
-            before: '.page-break'
-        }
-    };
-
-    // Estilos temporales para mejorar el aspecto
-    const originalStyles = document.createElement('style');
-    originalStyles.innerHTML = `
-        .main-container * {
-            font-size: 10pt !important;
-            line-height: 1.4 !important;
-            page-break-inside: avoid !important;
-        }
-        table, tr, td, th {
-            page-break-inside: avoid !important;
-            page-break-before: auto !important;
-            page-break-after: auto !important;
-        }
-        img {
-            page-break-inside: avoid !important;
-        }
-    `;
-    document.head.appendChild(originalStyles);
-
-    html2pdf().set(opt).from(element).save().finally(() => {
-        document.head.removeChild(originalStyles);
-    });
+    // Función simulada de envío (reemplaza con tu backend real)
+    function simulateEmailSend(formData, callback) {
+        // SIMULACIÓN TEMPORAL - REEMPLAZA CON TU BACKEND
+        setTimeout(() => {
+            callback(true); // Cambia a false para simular error
+        }, 2000);
+        
+        // EJEMPLO CON FETCH (reemplaza la simulación):
+        /*
+        fetch('/api/send-email/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            callback(data.success);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            callback(false);
+        });
+        */
+    }
 });
-
 </script>
 </body>
 </html>

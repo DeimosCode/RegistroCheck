@@ -1,12 +1,8 @@
 from django.db import models
-from django.conf import settings  # Para obtener el modelo User configurado
-from django.utils import timezone
-
-
-# models.py
 from django.conf import settings
-from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import User
+
 
 class Empresa(models.Model):
     nombre = models.CharField(max_length=100)
@@ -30,29 +26,13 @@ class PerfilUsuario(models.Model):
         return f"{self.usuario.username} - {self.empresa}"
 
 
-# from django.db.models.signals import post_save
-# from django.dispatch import receiver
-# from django.contrib.auth.models import User
-# from .models import PerfilUsuario
-
-# @receiver(post_save, sender=User)
-# def crear_perfil_usuario(sender, instance, created, **kwargs):
-#     if created:
-#         PerfilUsuario.objects.create(usuario=instance)
-
-
-
-
 ESTADOS = [
     ('BUENO', 'Bueno'),
-    ('REVISION', 'En Revisión'),
+    ('OBSERVACION', 'Con Observación'),
     ('RECHAZADO', 'Rechazado'),
 ]
 
 
-# --------------------------------------------
-# Modelo principal: Vehículo
-# --------------------------------------------
 class Vehiculo(models.Model):
     patente = models.CharField(max_length=10, unique=False, blank=True, null=True)
     numero_orden = models.PositiveIntegerField(unique=True, editable=False, null=True)
@@ -81,9 +61,7 @@ class Vehiculo(models.Model):
     def __str__(self):
         return f"#{self.numero_orden} - {self.marca} {self.modelo}"
 
-    # Métodos para el reporte PDF
     def get_total_puntos(self):
-        """Retorna el total de puntos revisados para este vehículo"""
         total = 0
         sistemas = [
             'detalle_motor', 'detalle_transmision', 'detalle_frenos',
@@ -98,15 +76,12 @@ class Vehiculo(models.Model):
         return total
 
     def get_puntos_aprobados(self):
-        """Retorna la cantidad de puntos en estado BUENO"""
         return self._contar_puntos_por_estado('BUENO')
 
     def get_puntos_revision(self):
-        """Retorna la cantidad de puntos en estado REVISION"""
         return self._contar_puntos_por_estado('REVISION')
 
     def get_puntos_rechazados(self):
-        """Retorna la cantidad de puntos en estado RECHAZADO"""
         return self._contar_puntos_por_estado('RECHAZADO')
 
     def _contar_puntos_por_estado(self, estado):
@@ -124,7 +99,6 @@ class Vehiculo(models.Model):
         return count
 
     def get_sistemas(self):
-        """Retorna lista de sistemas con su estado general"""
         sistemas_info = [
             {'nombre': 'Motor', 'attr': 'detalle_motor', 'icono': 'gear'},
             {'nombre': 'Transmisión', 'attr': 'detalle_transmision', 'icono': 'gear-wide-connected'},
@@ -148,7 +122,6 @@ class Vehiculo(models.Model):
         return sistemas
 
     def get_sistemas_con_puntos(self):
-        """Retorna sistemas con sus puntos para mostrar en detalle"""
         sistemas_info = [
             {'nombre': 'Motor', 'attr': 'detalle_motor', 'icono': 'gear'},
             {'nombre': 'Transmisión', 'attr': 'detalle_transmision', 'icono': 'gear-wide-connected'},
@@ -194,28 +167,49 @@ class Vehiculo(models.Model):
 
     @property
     def porcentaje_aprobacion(self):
-        """Retorna el porcentaje de puntos aprobados"""
         total = self.get_total_puntos()
         if total == 0:
             return 0
         return (self.get_puntos_aprobados() / total) * 100
 
-# --------------------------------------------
-# Modelo para almacenar imágenes como texto
-# --------------------------------------------
+
 class ImagenTexto(models.Model):
     nombre = models.CharField(max_length=100)
-    imagen_base64 = models.TextField()  # Guarda la imagen como texto
+    imagen_base64 = models.TextField()
 
     def __str__(self):
         return self.nombre
 
 
 # --------------------------------------------
-# Detalle Motor y sus puntos con usuario y fecha
+# Modelo Base Abstracto para Imágenes
+# --------------------------------------------
+class ImagenPuntoBase(models.Model):
+    imagen_base64 = models.TextField()
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return f"Imagen - {self.fecha_subida.strftime('%Y-%m-%d %H:%M')}"
+
+
+# --------------------------------------------
+# Detalle Motor
 # --------------------------------------------
 class DetalleMotor(models.Model):
-    vehiculo = models.OneToOneField(Vehiculo, on_delete=models.CASCADE, related_name='detalle_motor')
+    vehiculo = models.OneToOneField(
+        Vehiculo,
+        on_delete=models.CASCADE,
+        related_name='detalle_motor'
+    )
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -226,7 +220,7 @@ class DetalleMotor(models.Model):
     fecha_revision = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Revisión motor de {self.vehiculo}'
+        return f"Revisión motor de {self.vehiculo}"
 
 
 class PuntoMotor(models.Model):
@@ -236,12 +230,14 @@ class PuntoMotor(models.Model):
         ('respuesta', 'Respuesta del motor'),
     ]
 
-    detalle = models.ForeignKey(DetalleMotor, on_delete=models.CASCADE, related_name='puntos')
+    detalle = models.ForeignKey(
+        DetalleMotor,
+        on_delete=models.CASCADE,
+        related_name='puntos'
+    )
     nombre = models.CharField(max_length=20, choices=NOMBRES_PUNTOS)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='REVISION')
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='REVISION')  # Cambiado a 15
     observacion = models.TextField(blank=True, null=True)
-    imagen_base64 = models.TextField(blank=True, null=True)
-
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -257,9 +253,26 @@ class PuntoMotor(models.Model):
     def __str__(self):
         return f"{self.get_nombre_display()} - {self.estado}"
 
+    def tiene_imagenes(self):
+        return self.imagenes.exists()
+    
+    def cantidad_imagenes(self):
+        return self.imagenes.count()
+
+
+class PuntoMotorImagen(ImagenPuntoBase):
+    punto = models.ForeignKey(
+        PuntoMotor,
+        on_delete=models.CASCADE,
+        related_name="imagenes"
+    )
+
+    def __str__(self):
+        return f"Motor: {self.punto.get_nombre_display()}"
+
 
 # --------------------------------------------
-# Detalle Transmisión y puntos con usuario y fecha
+# Detalle Transmisión
 # --------------------------------------------
 class DetalleTransmision(models.Model):
     vehiculo = models.OneToOneField(Vehiculo, on_delete=models.CASCADE, related_name='detalle_transmision')
@@ -285,10 +298,8 @@ class PuntoTransmision(models.Model):
 
     detalle = models.ForeignKey(DetalleTransmision, on_delete=models.CASCADE, related_name='puntos')
     nombre = models.CharField(max_length=30, choices=NOMBRES_PUNTOS)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='REVISION')
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='REVISION')  # Cambiado a 15
     observacion = models.TextField(blank=True, null=True)
-    imagen_base64 = models.TextField(blank=True, null=True)
-
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -304,9 +315,26 @@ class PuntoTransmision(models.Model):
     def __str__(self):
         return f"{self.get_nombre_display()} - {self.estado}"
 
+    def tiene_imagenes(self):
+        return self.imagenes.exists()
+    
+    def cantidad_imagenes(self):
+        return self.imagenes.count()
+
+
+class PuntoTransmisionImagen(ImagenPuntoBase):
+    punto = models.ForeignKey(
+        PuntoTransmision,
+        on_delete=models.CASCADE,
+        related_name="imagenes"
+    )
+
+    def __str__(self):
+        return f"Transmisión: {self.punto.get_nombre_display()}"
+
 
 # --------------------------------------------
-# Detalle Frenos y puntos con usuario y fecha
+# Detalle Frenos
 # --------------------------------------------
 class DetalleFrenos(models.Model):
     vehiculo = models.OneToOneField(Vehiculo, on_delete=models.CASCADE, related_name='detalle_frenos')
@@ -332,10 +360,8 @@ class PuntoFrenos(models.Model):
 
     detalle = models.ForeignKey(DetalleFrenos, on_delete=models.CASCADE, related_name='puntos')
     nombre = models.CharField(max_length=30, choices=NOMBRES_PUNTOS)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='REVISION')
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='REVISION')  # Cambiado a 15
     observacion = models.TextField(blank=True, null=True)
-    imagen_base64 = models.TextField(blank=True, null=True)
-
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -351,9 +377,26 @@ class PuntoFrenos(models.Model):
     def __str__(self):
         return f"{self.get_nombre_display()} - {self.estado}"
 
+    def tiene_imagenes(self):
+        return self.imagenes.exists()
+    
+    def cantidad_imagenes(self):
+        return self.imagenes.count()
+
+
+class PuntoFrenosImagen(ImagenPuntoBase):
+    punto = models.ForeignKey(
+        PuntoFrenos,
+        on_delete=models.CASCADE,
+        related_name="imagenes"
+    )
+
+    def __str__(self):
+        return f"Frenos: {self.punto.get_nombre_display()}"
+
 
 # --------------------------------------------
-# Detalle Dirección y Suspensión y puntos con usuario y fecha
+# Detalle Dirección y Suspensión
 # --------------------------------------------
 class DetalleDireccionSuspension(models.Model):
     vehiculo = models.OneToOneField(Vehiculo, on_delete=models.CASCADE, related_name='detalle_direccion_suspension')
@@ -381,10 +424,8 @@ class PuntoDireccionSuspension(models.Model):
 
     detalle = models.ForeignKey(DetalleDireccionSuspension, on_delete=models.CASCADE, related_name='puntos')
     nombre = models.CharField(max_length=50, choices=NOMBRES_PUNTOS)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='REVISION')
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='REVISION')  # Cambiado a 15
     observacion = models.TextField(blank=True, null=True)
-    imagen_base64 = models.TextField(blank=True, null=True)
-
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -400,8 +441,26 @@ class PuntoDireccionSuspension(models.Model):
     def __str__(self):
         return f"{self.get_nombre_display()} - {self.estado}"
 
+    def tiene_imagenes(self):
+        return self.imagenes.exists()
+    
+    def cantidad_imagenes(self):
+        return self.imagenes.count()
+
+
+class PuntoDireccionSuspensionImagen(ImagenPuntoBase):
+    punto = models.ForeignKey(
+        PuntoDireccionSuspension,
+        on_delete=models.CASCADE,
+        related_name="imagenes"
+    )
+
+    def __str__(self):
+        return f"Dirección/Suspensión: {self.punto.get_nombre_display()}"
+
+
 # --------------------------------------------
-# Detalle Carrocería y puntos con usuario y fecha
+# Detalle Carrocería
 # --------------------------------------------
 class DetalleCarroceria(models.Model):
     vehiculo = models.OneToOneField(Vehiculo, on_delete=models.CASCADE, related_name='detalle_carroceria')
@@ -428,10 +487,8 @@ class PuntoCarroceria(models.Model):
 
     detalle = models.ForeignKey(DetalleCarroceria, on_delete=models.CASCADE, related_name='puntos')
     nombre = models.CharField(max_length=50, choices=NOMBRES_PUNTOS)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='REVISION')
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='REVISION')  # Cambiado a 15
     observacion = models.TextField(blank=True, null=True)
-    imagen_base64 = models.TextField(blank=True, null=True)
-
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -447,10 +504,27 @@ class PuntoCarroceria(models.Model):
     def __str__(self):
         return f"{self.get_nombre_display()} - {self.estado}"
 
-# --------------------------------------------
-# Detalle revision general con usuario y fecha
-# --------------------------------------------
+    def tiene_imagenes(self):
+        return self.imagenes.exists()
+    
+    def cantidad_imagenes(self):
+        return self.imagenes.count()
 
+
+class PuntoCarroceriaImagen(ImagenPuntoBase):
+    punto = models.ForeignKey(
+        PuntoCarroceria,
+        on_delete=models.CASCADE,
+        related_name="imagenes"
+    )
+
+    def __str__(self):
+        return f"Carrocería: {self.punto.get_nombre_display()}"
+
+
+# --------------------------------------------
+# Detalle Revisión General
+# --------------------------------------------
 class DetalleRevisionGeneral(models.Model):
     vehiculo = models.OneToOneField(
         Vehiculo, 
@@ -469,6 +543,7 @@ class DetalleRevisionGeneral(models.Model):
     def __str__(self):
         return f"Revisión General de {self.vehiculo}"
 
+
 class PuntoRevisionGeneral(models.Model):
     NOMBRES_PUNTOS = [
         ('estado_luces', 'Estado de luces'),
@@ -486,10 +561,8 @@ class PuntoRevisionGeneral(models.Model):
         related_name='puntos'
     )
     nombre = models.CharField(max_length=50, choices=NOMBRES_PUNTOS)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='REVISION')
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='REVISION')  # Cambiado a 15
     observacion = models.TextField(blank=True, null=True)
-    imagen_base64 = models.TextField(blank=True, null=True)
-    
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -505,12 +578,27 @@ class PuntoRevisionGeneral(models.Model):
     def __str__(self):
         return f"{self.get_nombre_display()} - {self.estado}"
 
+    def tiene_imagenes(self):
+        return self.imagenes.exists()
+    
+    def cantidad_imagenes(self):
+        return self.imagenes.count()
+
+
+class PuntoRevisionGeneralImagen(ImagenPuntoBase):
+    punto = models.ForeignKey(
+        PuntoRevisionGeneral,
+        on_delete=models.CASCADE,
+        related_name="imagenes"
+    )
+
+    def __str__(self):
+        return f"Revisión General: {self.punto.get_nombre_display()}"
+
 
 # --------------------------------------------
-# Detalle revision general con usuario y fecha
+# Detalle Interior
 # --------------------------------------------
-
-
 class DetalleInterior(models.Model):
     vehiculo = models.OneToOneField(
         Vehiculo, 
@@ -529,6 +617,7 @@ class DetalleInterior(models.Model):
     def __str__(self):
         return f"Revisión Interior de {self.vehiculo}"
 
+
 class PuntoInterior(models.Model):
     NOMBRES_PUNTOS = [
         ('estado_tapiz_butacas', 'Estado de tapiz y butacas'),
@@ -544,10 +633,8 @@ class PuntoInterior(models.Model):
         related_name='puntos'
     )
     nombre = models.CharField(max_length=50, choices=NOMBRES_PUNTOS)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='REVISION')
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='REVISION')  # Cambiado a 15
     observacion = models.TextField(blank=True, null=True)
-    imagen_base64 = models.TextField(blank=True, null=True)
-    
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -562,13 +649,20 @@ class PuntoInterior(models.Model):
 
     def __str__(self):
         return f"{self.get_nombre_display()} - {self.estado}"
+
+    def tiene_imagenes(self):
+        return self.imagenes.exists()
     
+    def cantidad_imagenes(self):
+        return self.imagenes.count()
 
-# models.py (añade al final)
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
-# @receiver(post_save, sender=User)
-# def crear_perfil_usuario(sender, instance, created, **kwargs):
-#     if created:
-#         PerfilUsuario.objects.create(usuario=instance)
+class PuntoInteriorImagen(ImagenPuntoBase):
+    punto = models.ForeignKey(
+        PuntoInterior,
+        on_delete=models.CASCADE,
+        related_name="imagenes"
+    )
+
+    def __str__(self):
+        return f"Interior: {self.punto.get_nombre_display()}"

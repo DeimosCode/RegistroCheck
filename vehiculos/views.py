@@ -1,34 +1,28 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
-from .models import (
-    Vehiculo, DetalleMotor, PuntoMotor,
-    DetalleTransmision, PuntoTransmision,
-    DetalleFrenos, PuntoFrenos,
-    DetalleDireccionSuspension, PuntoDireccionSuspension,DetalleCarroceria,PuntoCarroceria,PuntoRevisionGeneral,DetalleRevisionGeneral,DetalleInterior,PuntoInterior
-)
 from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
 from django.contrib import messages
 from django.db.models.functions import TruncDate
-from django.db.models import Count
+from django.db.models import Count, Q
+from django.utils import timezone
 
+from .models import (
+    Vehiculo, DetalleMotor, PuntoMotor, PuntoMotorImagen,
+    DetalleTransmision, PuntoTransmision, PuntoTransmisionImagen,
+    DetalleFrenos, PuntoFrenos, PuntoFrenosImagen,
+    DetalleDireccionSuspension, PuntoDireccionSuspension, PuntoDireccionSuspensionImagen,
+    DetalleCarroceria, PuntoCarroceria, PuntoCarroceriaImagen,
+    DetalleRevisionGeneral, PuntoRevisionGeneral, PuntoRevisionGeneralImagen,
+    DetalleInterior, PuntoInterior, PuntoInteriorImagen
+)
 
-def obtener_empresa_usuario(user):
-    """Obtiene la empresa asociada al usuario si existe"""
-    if hasattr(user, 'perfil') and user.perfil.empresa:
-        return user.perfil.empresa
-    return None
-
-def es_tecnico(user):
-    return hasattr(user, 'perfil') and user.perfil.cargo.lower() == 'TECNICO'
-
-def es_jefe(user):
-    return hasattr(user, 'perfil') and user.perfil.cargo.lower() == 'jefe'
-
-def es_gerente(user):
-    return hasattr(user, 'perfil') and user.perfil.cargo.lower() == 'gerente'
+ESTADOS = [
+    ('BUENO', 'Bueno'),
+    ('OBSERVACION', 'Con Observación'),
+    ('RECHAZADO', 'Rechazado'),
+]
 
 # ------------------------------
 # Login View
@@ -49,38 +43,32 @@ def login_view(request):
 
 
 # ------------------------------
-# Página principal - muestra gráfico con conteo de vehículos por día
+# Página principal
 # ------------------------------
-from django.utils import timezone
-from django.db.models import Q
-
 @login_required
 def index(request):
     user = request.user
     hoy = timezone.now().date()
     
-    # 1. Obtener vehículos según permisos
+    # Obtener vehículos según permisos
     if user.is_superuser:
         vehiculos = Vehiculo.objects.all()
     else:
         try:
-            perfil = user.perfilusuario  # Cambiado de 'perfil' a 'perfilusuario'
+            perfil = user.perfilusuario
             
             if perfil.cargo == 'TECNICO':
-                # Técnicos solo ven sus propios vehículos
                 vehiculos = Vehiculo.objects.filter(usuario=user)
             elif perfil.cargo in ['JEFE', 'GERENTE']:
-                # Jefes y gerentes ven los vehículos de su empresa
                 vehiculos = Vehiculo.objects.filter(
                     usuario__perfilusuario__empresa=perfil.empresa
                 )
             else:
                 vehiculos = Vehiculo.objects.none()
         except AttributeError:
-            # Si no tiene perfil
             vehiculos = Vehiculo.objects.none()
 
-    # 2. Datos para el gráfico (últimos 7 días)
+    # Datos para el gráfico (últimos 7 días)
     fecha_inicio = hoy - timezone.timedelta(days=6)
     registros_por_dia = (
         vehiculos.filter(fecha_registro__date__gte=fecha_inicio)
@@ -90,7 +78,7 @@ def index(request):
         .order_by('dia')
     )
 
-    # 3. Crear un diccionario completo para los últimos 7 días
+    # Crear diccionario para los últimos 7 días
     datos_grafico = {fecha_inicio + timezone.timedelta(days=i): 0 for i in range(7)}
     
     for registro in registros_por_dia:
@@ -99,11 +87,10 @@ def index(request):
     fechas = [dia.strftime('%Y-%m-%d') for dia in sorted(datos_grafico.keys())]
     cantidades = [datos_grafico[dia] for dia in sorted(datos_grafico.keys())]
 
-    # 4. Calcular estadísticas
+    # Calcular estadísticas
     total_vehiculos = vehiculos.count()
     revisiones_hoy = vehiculos.filter(fecha_registro__date=hoy).count()
     
-    # Vehículos con problemas (ejemplo: aquellos con algún punto rechazado)
     mantenimientos_pendientes = vehiculos.filter(
         Q(detalle_motor__puntos__estado='RECHAZADO') |
         Q(detalle_transmision__puntos__estado='RECHAZADO') |
@@ -111,7 +98,7 @@ def index(request):
         Q(detalle_direccion_suspension__puntos__estado='RECHAZADO')
     ).distinct().count()
 
-    # 5. Obtener información del perfil para mostrar
+    # Obtener información del perfil
     try:
         perfil = user.perfilusuario
         empresa = perfil.empresa.nombre if perfil.empresa else "Sin empresa asignada"
@@ -167,18 +154,9 @@ def agregar_vehiculo(request):
     return render(request, 'vehiculos/agregar_vehiculo.html')
 
 
-
 # ------------------------------
 # Listar vehículos con filtro y paginación
 # ------------------------------
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render
-from django.core.paginator import Paginator
-from django.utils.dateparse import parse_date
-from .models import Vehiculo
-
-
-
 @login_required
 def listar_vehiculos(request):
     user = request.user
@@ -191,20 +169,17 @@ def listar_vehiculos(request):
         vehiculos = Vehiculo.objects.all()
     else:
         try:
-            perfil = user.perfilusuario  # Cambiado de 'perfil' a 'perfilusuario'
+            perfil = user.perfilusuario
             
             if perfil.cargo == 'TECNICO':
-                # Técnicos solo ven sus propios vehículos
                 vehiculos = Vehiculo.objects.filter(usuario=user)
             elif perfil.cargo in ['JEFE', 'GERENTE']:
-                # Jefes y gerentes ven los vehículos de su empresa
                 vehiculos = Vehiculo.objects.filter(
                     usuario__perfilusuario__empresa=perfil.empresa
                 )
             else:
                 vehiculos = Vehiculo.objects.none()
         except AttributeError:
-            # Si no tiene perfil
             vehiculos = Vehiculo.objects.none()
 
     # Aplicar filtros adicionales
@@ -244,7 +219,7 @@ def listar_vehiculos(request):
     except AttributeError:
         puede_ver_opciones = False
 
-    # Obtener información del perfil para mostrar en template
+    # Obtener información del perfil
     try:
         empresa_usuario = user.perfilusuario.empresa.nombre if user.perfilusuario.empresa else "Sin empresa"
         cargo_usuario = user.perfilusuario.get_cargo_display()
@@ -262,13 +237,50 @@ def listar_vehiculos(request):
         'cargo_usuario': cargo_usuario,
     })
 
+
 # ------------------------------
-# Agregar / editar detalle motor con usuario y fecha
+# Función auxiliar para procesar puntos con múltiples imágenes
+# ------------------------------
+def procesar_punto_con_imagenes(detalle, punto_model, punto_imagen_model, clave, request):
+    """Procesa un punto con sus múltiples imágenes"""
+    estado = request.POST.get(f'estado_{clave}')
+    observacion = request.POST.get(f'observaciones_{clave}')
+    imagenes_base64 = request.POST.getlist(f'imagenes_{clave}[]')
+
+    if estado or observacion is not None or imagenes_base64:
+        punto, _ = punto_model.objects.get_or_create(
+            detalle=detalle, 
+            nombre=clave, 
+            defaults={'usuario': request.user}
+        )
+
+        punto.estado = estado or punto.estado
+        punto.observacion = observacion if observacion is not None else punto.observacion
+        punto.usuario = request.user
+        punto.save()
+
+        # Procesar imágenes
+        for imagen_base64 in imagenes_base64:
+            if imagen_base64.strip():
+                punto_imagen_model.objects.create(
+                    punto=punto,
+                    imagen_base64=imagen_base64,
+                    usuario=request.user
+                )
+
+    return punto
+
+
+# ------------------------------
+# Detalle Motor
 # ------------------------------
 @login_required
 def agregar_detalle_motor(request, id):
     vehiculo = get_object_or_404(Vehiculo, id=id)
-    detalle_motor, created = DetalleMotor.objects.get_or_create(vehiculo=vehiculo, defaults={'usuario': request.user})
+    detalle_motor, created = DetalleMotor.objects.get_or_create(
+        vehiculo=vehiculo, 
+        defaults={'usuario': request.user}
+    )
 
     puntos_motor = [
         ('ruidos', 'Presencia de ruidos anormales en motor'),
@@ -276,27 +288,11 @@ def agregar_detalle_motor(request, id):
         ('respuesta', 'Respuesta del motor'),
     ]
 
-    ESTADOS = [
-        ('BUENO', 'Bueno'),
-        ('REVISION', 'Requiere Revisión'),
-        ('RECHAZADO', 'Rechazado'),
-    ]
-
     if request.method == 'POST':
         for clave, label in puntos_motor:
-            estado = request.POST.get(f'estado_{clave}')
-            observacion = request.POST.get(f'observaciones_{clave}')
-            imagen_base64 = request.POST.get(f'imagen_{clave}')
-
-            if estado or observacion is not None or imagen_base64:
-                punto, _ = PuntoMotor.objects.get_or_create(detalle=detalle_motor, nombre=clave, defaults={'usuario': request.user})
-
-                # Actualizar datos y usuario que modifica
-                punto.estado = estado or punto.estado
-                punto.observacion = observacion if observacion is not None else punto.observacion
-                punto.imagen_base64 = imagen_base64 or punto.imagen_base64
-                punto.usuario = request.user
-                punto.save()
+            procesar_punto_con_imagenes(
+                detalle_motor, PuntoMotor, PuntoMotorImagen, clave, request
+            )
 
         messages.success(request, "Detalle del motor guardado correctamente.")
         return redirect('ver_reporte_vehiculo', id=vehiculo.id)
@@ -312,12 +308,15 @@ def agregar_detalle_motor(request, id):
 
 
 # ------------------------------
-# Agregar / editar detalle transmisión
+# Detalle Transmisión
 # ------------------------------
 @login_required
 def agregar_detalle_transmision(request, id):
     vehiculo = get_object_or_404(Vehiculo, id=id)
-    detalle_transmision, created = DetalleTransmision.objects.get_or_create(vehiculo=vehiculo, defaults={'usuario': request.user})
+    detalle_transmision, created = DetalleTransmision.objects.get_or_create(
+        vehiculo=vehiculo, 
+        defaults={'usuario': request.user}
+    )
 
     puntos_transmision = [
         ('paso_marchas', 'Paso de marchas'),
@@ -325,26 +324,11 @@ def agregar_detalle_transmision(request, id):
         ('estado_embrague', 'Estado de embrague'),
     ]
 
-    ESTADOS = [
-        ('BUENO', 'Bueno'),
-        ('REVISION', 'Requiere Revisión'),
-        ('RECHAZADO', 'Rechazado'),
-    ]
-
     if request.method == 'POST':
         for clave, label in puntos_transmision:
-            estado = request.POST.get(f'estado_{clave}')
-            observacion = request.POST.get(f'observaciones_{clave}')
-            imagen_base64 = request.POST.get(f'imagen_{clave}')
-
-            if estado or observacion is not None or imagen_base64:
-                punto, _ = PuntoTransmision.objects.get_or_create(detalle=detalle_transmision, nombre=clave, defaults={'usuario': request.user})
-
-                punto.estado = estado or punto.estado
-                punto.observacion = observacion if observacion is not None else punto.observacion
-                punto.imagen_base64 = imagen_base64 or punto.imagen_base64
-                punto.usuario = request.user
-                punto.save()
+            procesar_punto_con_imagenes(
+                detalle_transmision, PuntoTransmision, PuntoTransmisionImagen, clave, request
+            )
 
         messages.success(request, "Detalle de transmisión guardado correctamente.")
         return redirect('ver_reporte_vehiculo', id=vehiculo.id)
@@ -360,12 +344,15 @@ def agregar_detalle_transmision(request, id):
 
 
 # ------------------------------
-# Agregar / editar detalle frenos
+# Detalle Frenos
 # ------------------------------
 @login_required
 def agregar_detalle_frenos(request, id):
     vehiculo = get_object_or_404(Vehiculo, id=id)
-    detalle_frenos, created = DetalleFrenos.objects.get_or_create(vehiculo=vehiculo, defaults={'usuario': request.user})
+    detalle_frenos, created = DetalleFrenos.objects.get_or_create(
+        vehiculo=vehiculo, 
+        defaults={'usuario': request.user}
+    )
 
     puntos_frenos = [
         ('frenado_correcto', 'Frenado correcto a distancia adecuada'),
@@ -373,26 +360,11 @@ def agregar_detalle_frenos(request, id):
         ('olgura_freno_mano', 'Olgura de freno de mano'),
     ]
 
-    ESTADOS = [
-        ('BUENO', 'Bueno'),
-        ('REVISION', 'Requiere Revisión'),
-        ('RECHAZADO', 'Rechazado'),
-    ]
-
     if request.method == 'POST':
         for clave, label in puntos_frenos:
-            estado = request.POST.get(f'estado_{clave}')
-            observacion = request.POST.get(f'observaciones_{clave}')
-            imagen_base64 = request.POST.get(f'imagen_{clave}')
-
-            if estado or observacion is not None or imagen_base64:
-                punto, _ = PuntoFrenos.objects.get_or_create(detalle=detalle_frenos, nombre=clave, defaults={'usuario': request.user})
-
-                punto.estado = estado or punto.estado
-                punto.observacion = observacion if observacion is not None else punto.observacion
-                punto.imagen_base64 = imagen_base64 or punto.imagen_base64
-                punto.usuario = request.user
-                punto.save()
+            procesar_punto_con_imagenes(
+                detalle_frenos, PuntoFrenos, PuntoFrenosImagen, clave, request
+            )
 
         messages.success(request, "Detalle de frenos guardado correctamente.")
         return redirect('ver_reporte_vehiculo', id=vehiculo.id)
@@ -408,12 +380,15 @@ def agregar_detalle_frenos(request, id):
 
 
 # ------------------------------
-# Agregar / editar detalle dirección y suspensión
+# Detalle Dirección y Suspensión
 # ------------------------------
 @login_required
 def agregar_detalle_direccion_suspension(request, id):
     vehiculo = get_object_or_404(Vehiculo, id=id)
-    detalle_direccion_suspension, created = DetalleDireccionSuspension.objects.get_or_create(vehiculo=vehiculo, defaults={'usuario': request.user})
+    detalle_direccion_suspension, created = DetalleDireccionSuspension.objects.get_or_create(
+        vehiculo=vehiculo, 
+        defaults={'usuario': request.user}
+    )
 
     puntos_direccion_suspension = [
         ('amortiguadores', 'Amortiguadores en buen estado'),
@@ -423,26 +398,12 @@ def agregar_detalle_direccion_suspension(request, id):
         ('ruidos_tren_trasero', 'Ruidos en tren trasero'),
     ]
 
-    ESTADOS = [
-        ('BUENO', 'Bueno'),
-        ('REVISION', 'Requiere Revisión'),
-        ('RECHAZADO', 'Rechazado'),
-    ]
-
     if request.method == 'POST':
         for clave, label in puntos_direccion_suspension:
-            estado = request.POST.get(f'estado_{clave}')
-            observacion = request.POST.get(f'observaciones_{clave}')
-            imagen_base64 = request.POST.get(f'imagen_{clave}')
-
-            if estado or observacion is not None or imagen_base64:
-                punto, _ = PuntoDireccionSuspension.objects.get_or_create(detalle=detalle_direccion_suspension, nombre=clave, defaults={'usuario': request.user})
-
-                punto.estado = estado or punto.estado
-                punto.observacion = observacion if observacion is not None else punto.observacion
-                punto.imagen_base64 = imagen_base64 or punto.imagen_base64
-                punto.usuario = request.user
-                punto.save()
+            procesar_punto_con_imagenes(
+                detalle_direccion_suspension, PuntoDireccionSuspension, 
+                PuntoDireccionSuspensionImagen, clave, request
+            )
 
         messages.success(request, "Detalle de Dirección y Suspensión guardado correctamente.")
         return redirect('ver_reporte_vehiculo', id=vehiculo.id)
@@ -458,64 +419,8 @@ def agregar_detalle_direccion_suspension(request, id):
 
 
 # ------------------------------
-# Ver reporte completo del vehículo con todos los detalles y puntos
+# Detalle Carrocería
 # ------------------------------
-@login_required
-def ver_reporte_vehiculo(request, id):
-    vehiculo = get_object_or_404(Vehiculo, id=id)
-    
-    # Detalles existentes
-    detalle_motor = getattr(vehiculo, 'detalle_motor', None)
-    puntos_motor = detalle_motor.puntos.all() if detalle_motor else []
-    puntos_motor_dict = {p.nombre: p for p in puntos_motor}
-
-    detalle_transmision = getattr(vehiculo, 'detalle_transmision', None)
-    puntos_transmision = detalle_transmision.puntos.all() if detalle_transmision else []
-    puntos_transmision_dict = {p.nombre: p for p in puntos_transmision}
-
-    detalle_frenos = getattr(vehiculo, 'detalle_frenos', None)
-    puntos_frenos = detalle_frenos.puntos.all() if detalle_frenos else []
-    puntos_frenos_dict = {p.nombre: p for p in puntos_frenos}
-
-    detalle_direccion_suspension = getattr(vehiculo, 'detalle_direccion_suspension', None)
-    puntos_direccion_suspension = detalle_direccion_suspension.puntos.all() if detalle_direccion_suspension else []
-    puntos_direccion_suspension_dict = {p.nombre: p for p in puntos_direccion_suspension}
-
-    detalle_carroceria = getattr(vehiculo, 'detalle_carroceria', None)
-    puntos_carroceria = detalle_carroceria.puntos.all() if detalle_carroceria else []
-    puntos_carroceria_dict = {p.nombre: p for p in puntos_carroceria}
-
-    # Revisión General
-    detalle_revision_general = getattr(vehiculo, 'detalle_revision_general', None)
-    puntos_revision_general = detalle_revision_general.puntos.all() if detalle_revision_general else []
-    puntos_revision_general_dict = {p.nombre: p for p in puntos_revision_general}
-
-    # Nuevo: Interior
-    detalle_interior = getattr(vehiculo, 'detalle_interior', None)
-    puntos_interior = detalle_interior.puntos.all() if detalle_interior else []
-    puntos_interior_dict = {p.nombre: p for p in puntos_interior}
-
-    return render(request, 'vehiculos/ver_reporte.html', {
-        'vehiculo': vehiculo,
-        'detalle_motor': detalle_motor,
-        'puntos_motor': puntos_motor_dict,
-        'detalle_transmision': detalle_transmision,
-        'puntos_transmision': puntos_transmision_dict,
-        'detalle_frenos': detalle_frenos,
-        'puntos_frenos': puntos_frenos_dict,
-        'detalle_direccion_suspension': detalle_direccion_suspension,
-        'puntos_direccion_suspension': puntos_direccion_suspension_dict,
-        'detalle_carroceria': detalle_carroceria,
-        'puntos_carroceria': puntos_carroceria_dict,
-        'detalle_revision_general': detalle_revision_general,
-        'puntos_revision_general': puntos_revision_general_dict,
-        'detalle_interior': detalle_interior,
-        'puntos_interior': puntos_interior_dict,
-    })
-# ------------------------------
-# Detalle Carroceria
-# ------------------------------
-
 @login_required
 def agregar_detalle_carroceria(request, id):
     vehiculo = get_object_or_404(Vehiculo, id=id)
@@ -531,30 +436,11 @@ def agregar_detalle_carroceria(request, id):
         ('alineacion_piezas', 'Alineación de piezas de carrocería'),
     ]
 
-    ESTADOS = [
-        ('BUENO', 'Bueno'),
-        ('REVISION', 'Requiere Revisión'),
-        ('RECHAZADO', 'Rechazado'),
-    ]
-
     if request.method == 'POST':
         for clave, label in puntos_carroceria:
-            estado = request.POST.get(f'estado_{clave}')
-            observacion = request.POST.get(f'observaciones_{clave}')
-            imagen_base64 = request.POST.get(f'imagen_{clave}')
-
-            if estado or observacion is not None or imagen_base64:
-                punto, _ = PuntoCarroceria.objects.get_or_create(
-                    detalle=detalle_carroceria, 
-                    nombre=clave, 
-                    defaults={'usuario': request.user}
-                )
-
-                punto.estado = estado or punto.estado
-                punto.observacion = observacion if observacion is not None else punto.observacion
-                punto.imagen_base64 = imagen_base64 or punto.imagen_base64
-                punto.usuario = request.user
-                punto.save()
+            procesar_punto_con_imagenes(
+                detalle_carroceria, PuntoCarroceria, PuntoCarroceriaImagen, clave, request
+            )
 
         messages.success(request, "Detalle de carrocería guardado correctamente.")
         return redirect('ver_reporte_vehiculo', id=vehiculo.id)
@@ -570,9 +456,8 @@ def agregar_detalle_carroceria(request, id):
 
 
 # ------------------------------
-# Revision General
+# Revisión General
 # ------------------------------
-
 @login_required
 def agregar_detalle_revision_general(request, id):
     vehiculo = get_object_or_404(Vehiculo, id=id)
@@ -591,30 +476,11 @@ def agregar_detalle_revision_general(request, id):
         ('rueda_repuesto', 'Rueda de repuesto'),
     ]
 
-    ESTADOS = [
-        ('BUENO', 'Bueno'),
-        ('REVISION', 'Requiere Revisión'),
-        ('RECHAZADO', 'Rechazado'),
-    ]
-
     if request.method == 'POST':
         for clave, label in puntos_revision:
-            estado = request.POST.get(f'estado_{clave}')
-            observacion = request.POST.get(f'observaciones_{clave}')
-            imagen_base64 = request.POST.get(f'imagen_{clave}')
-
-            if estado or observacion is not None or imagen_base64:
-                punto, _ = PuntoRevisionGeneral.objects.get_or_create(
-                    detalle=detalle_revision, 
-                    nombre=clave, 
-                    defaults={'usuario': request.user}
-                )
-
-                punto.estado = estado or punto.estado
-                punto.observacion = observacion if observacion is not None else punto.observacion
-                punto.imagen_base64 = imagen_base64 or punto.imagen_base64
-                punto.usuario = request.user
-                punto.save()
+            procesar_punto_con_imagenes(
+                detalle_revision, PuntoRevisionGeneral, PuntoRevisionGeneralImagen, clave, request
+            )
 
         messages.success(request, "Detalle de revisión general guardado correctamente.")
         return redirect('ver_reporte_vehiculo', id=vehiculo.id)
@@ -628,11 +494,10 @@ def agregar_detalle_revision_general(request, id):
         'ESTADOS': ESTADOS,
     })
 
+
 # ------------------------------
 # Detalle Interior
 # ------------------------------
-
-
 @login_required
 def agregar_detalle_interior(request, id):
     vehiculo = get_object_or_404(Vehiculo, id=id)
@@ -649,30 +514,11 @@ def agregar_detalle_interior(request, id):
         ('estado_maleta', 'Estado de maleta'),
     ]
 
-    ESTADOS = [
-        ('BUENO', 'Bueno'),
-        ('REVISION', 'Requiere Revisión'),
-        ('RECHAZADO', 'Rechazado'),
-    ]
-
     if request.method == 'POST':
         for clave, label in puntos_interior:
-            estado = request.POST.get(f'estado_{clave}')
-            observacion = request.POST.get(f'observaciones_{clave}')
-            imagen_base64 = request.POST.get(f'imagen_{clave}')
-
-            if estado or observacion is not None or imagen_base64:
-                punto, _ = PuntoInterior.objects.get_or_create(
-                    detalle=detalle_interior, 
-                    nombre=clave, 
-                    defaults={'usuario': request.user}
-                )
-
-                punto.estado = estado or punto.estado
-                punto.observacion = observacion if observacion is not None else punto.observacion
-                punto.imagen_base64 = imagen_base64 or punto.imagen_base64
-                punto.usuario = request.user
-                punto.save()
+            procesar_punto_con_imagenes(
+                detalle_interior, PuntoInterior, PuntoInteriorImagen, clave, request
+            )
 
         messages.success(request, "Detalle del interior guardado correctamente.")
         return redirect('ver_reporte_vehiculo', id=vehiculo.id)
@@ -685,3 +531,76 @@ def agregar_detalle_interior(request, id):
         'puntos': puntos,
         'ESTADOS': ESTADOS,
     })
+
+
+# ------------------------------
+# Ver reporte completo del vehículo
+# ------------------------------
+@login_required
+def ver_reporte_vehiculo(request, id):
+    vehiculo = get_object_or_404(Vehiculo, id=id)
+    
+    # Obtener todos los detalles y puntos
+    detalles = {}
+    sistemas = [
+        ('detalle_motor', 'puntos_motor'),
+        ('detalle_transmision', 'puntos_transmision'),
+        ('detalle_frenos', 'puntos_frenos'),
+        ('detalle_direccion_suspension', 'puntos_direccion_suspension'),
+        ('detalle_carroceria', 'puntos_carroceria'),
+        ('detalle_revision_general', 'puntos_revision_general'),
+        ('detalle_interior', 'puntos_interior'),
+    ]
+
+    # Obtener todos los puntos organizados por sistema para la sección de detalles avanzados
+    sistemas_con_puntos = []
+    todos_los_puntos = []  # Lista para almacenar todos los puntos
+    
+    for detalle_attr, puntos_attr in sistemas:
+        detalle = getattr(vehiculo, detalle_attr, None)
+        puntos = detalle.puntos.all() if detalle else []
+        puntos_dict = {p.nombre: p for p in puntos}
+        
+        detalles[detalle_attr] = detalle
+        detalles[puntos_attr] = puntos_dict
+        
+        # Agregar a la lista de todos los puntos
+        todos_los_puntos.extend(puntos)
+        
+        # Para la sección de detalles avanzados
+        if detalle and puntos:
+            sistema_info = {
+                'nombre': detalle_attr.replace('detalle_', '').replace('_', ' ').title(),
+                'icono': get_sistema_icon(detalle_attr),
+                'puntos': puntos
+            }
+            sistemas_con_puntos.append(sistema_info)
+
+    # Calcular estadísticas para el resumen usando la lista de todos los puntos
+    total_puntos = len(todos_los_puntos)
+    puntos_buenos = sum(1 for p in todos_los_puntos if p.estado == 'BUENO')
+    puntos_observacion = sum(1 for p in todos_los_puntos if p.estado == 'OBSERVACION')
+    puntos_rechazados = sum(1 for p in todos_los_puntos if p.estado == 'RECHAZADO')
+
+    return render(request, 'vehiculos/ver_reporte.html', {
+        'vehiculo': vehiculo,
+        'sistemas_con_puntos': sistemas_con_puntos,
+        'total_puntos': total_puntos,
+        'puntos_buenos': puntos_buenos,
+        'puntos_observacion': puntos_observacion,
+        'puntos_rechazados': puntos_rechazados,
+        **detalles
+    })
+
+def get_sistema_icon(detalle_attr):
+    """Devuelve el ícono correspondiente para cada sistema"""
+    iconos = {
+        'detalle_motor': 'gear',
+        'detalle_transmision': 'gear-wide-connected',
+        'detalle_frenos': 'stop-circle',
+        'detalle_direccion_suspension': 'sliders',
+        'detalle_carroceria': 'car-front',
+        'detalle_revision_general': 'clipboard-check',
+        'detalle_interior': 'cup-hot'
+    }
+    return iconos.get(detalle_attr, 'circle')
