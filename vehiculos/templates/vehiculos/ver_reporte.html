@@ -889,25 +889,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const loadingText = document.getElementById('loadingText');
         const loadingSubtext = document.getElementById('loadingSubtext');
         
-        loadingText.textContent = message;
-        loadingSubtext.textContent = submessage;
-        loadingOverlay.classList.add('active');
-        
-        // Prevenir scroll del body
-        document.body.style.overflow = 'hidden';
+        if (loadingOverlay && loadingText && loadingSubtext) {
+            loadingText.textContent = message;
+            loadingSubtext.textContent = submessage;
+            loadingOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
     }
 
     function hideLoading() {
         const loadingOverlay = document.getElementById('loadingOverlay');
-        loadingOverlay.classList.remove('active');
-        
-        // Restaurar scroll del body
-        document.body.style.overflow = '';
+        if (loadingOverlay) {
+            loadingOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     }
 
     // Función común para generar PDF
     function generatePDF(callback) {
         const element = document.querySelector('.main-container');
+        if (!element) {
+            console.error('❌ No se encontró .main-container');
+            if (callback) callback(null);
+            return;
+        }
         
         // Crear un wrapper para el contenido y la marca de agua
         const pdfWrapper = document.createElement('div');
@@ -920,7 +925,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Crear marca de agua dentro del wrapper
         const watermark = document.createElement('div');
         watermark.className = 'watermark-pdf-absolute';
-        watermark.innerHTML = "<img src='{% static 'img/logo2.png' %}' alt='Watermark'>";
+        // Usar una URL absoluta o ruta estática corregida
+        watermark.innerHTML = '<img src="/static/img/logo2.png" alt="Watermark" onerror="console.log(\'Logo no cargado\')">';
         
         pdfWrapper.appendChild(contentClone);
         pdfWrapper.appendChild(watermark);
@@ -1001,105 +1007,129 @@ document.addEventListener('DOMContentLoaded', function() {
                 const pdfBlob = pdf.output('blob');
                 cleanup(pdfWrapper, element, originalDisplay, originalStyles);
                 callback(pdfBlob);
+            }).catch(error => {
+                console.error('❌ Error generando PDF:', error);
+                cleanup(pdfWrapper, element, originalDisplay, originalStyles);
+                if (callback) callback(null);
             });
         }
     }
 
     // Función para limpiar recursos
     function cleanup(pdfWrapper, element, originalDisplay, originalStyles) {
-        document.head.removeChild(originalStyles);
-        element.style.display = originalDisplay;
-        if (pdfWrapper.parentNode) {
+        if (originalStyles && originalStyles.parentNode) {
+            document.head.removeChild(originalStyles);
+        }
+        if (element) {
+            element.style.display = originalDisplay;
+        }
+        if (pdfWrapper && pdfWrapper.parentNode) {
             pdfWrapper.parentNode.removeChild(pdfWrapper);
         }
     }
 
     // Generación de PDF (descarga)
-    document.getElementById('generatePdf').addEventListener('click', function() {
-        generatePDF(); // Sin callback para descarga directa
-    });
+    const generatePdfBtn = document.getElementById('generatePdf');
+    if (generatePdfBtn) {
+        generatePdfBtn.addEventListener('click', function() {
+            generatePDF(); // Sin callback para descarga directa
+        });
+    }
 
     // Botón Enviar por Correo
-    document.getElementById('sendEmail').addEventListener('click', function() {
-        showEmailModal();
-    });
+    const sendEmailBtn = document.getElementById('sendEmail');
+    if (sendEmailBtn) {
+        sendEmailBtn.addEventListener('click', function() {
+            showEmailModal();
+        });
+    }
 
-    // Función para mostrar modal de email COMPLETO
+    // Función para mostrar modal de email
     function showEmailModal() {
-        const modalHTML = `
-            <div class="modal fade" id="emailModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Enviar PDF por Correo</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="emailForm">
-                                <div class="mb-3">
-                                    <label for="recipientEmail" class="form-label">Correo destinatario</label>
-                                    <input type="email" class="form-control" id="recipientEmail" 
-                                        placeholder="ejemplo@correo.com" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="emailSubject" class="form-label">Asunto</label>
-                                    <input type="text" class="form-control" id="emailSubject" 
-                                        value="Reporte Vehículo {{ vehiculo.patente }}" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="emailMessage" class="form-label">Mensaje</label>
-                                    <textarea class="form-control" id="emailMessage" rows="3" 
-                                            placeholder="Mensaje opcional..."></textarea>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-success" id="sendEmailBtn">
-                                <i class="fas fa-paper-plane"></i> Enviar PDF
-                            </button>
+        // Verificar si el modal ya existe
+        let emailModal = document.getElementById('emailModal');
+        
+        if (!emailModal) {
+            const modalHTML = `
+                <div class="modal fade" id="emailModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Enviar PDF por Correo</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="emailForm">
+                                    <div class="mb-3">
+                                        <label for="recipientEmail" class="form-label">Correo destinatario</label>
+                                        <input type="email" class="form-control" id="recipientEmail" 
+                                            placeholder="ejemplo@correo.com" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="emailSubject" class="form-label">Asunto</label>
+                                        <input type="text" class="form-control" id="emailSubject" 
+                                            value="Reporte Vehículo {{ vehiculo.patente }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="emailMessage" class="form-label">Mensaje</label>
+                                        <textarea class="form-control" id="emailMessage" rows="3" 
+                                                placeholder="Mensaje opcional..."></textarea>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-success" id="sendEmailBtn">
+                                    <i class="fas fa-paper-plane"></i> Enviar PDF
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
-
-        if (!document.getElementById('emailModal')) {
+            `;
             document.body.insertAdjacentHTML('beforeend', modalHTML);
+            emailModal = document.getElementById('emailModal');
         }
 
-        const emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
-        emailModal.show();
+        const emailModalInstance = new bootstrap.Modal(emailModal);
+        emailModalInstance.show();
+
+        // Configurar evento del botón enviar
+        const modalSendBtn = document.getElementById('sendEmailBtn');
+        if (modalSendBtn) {
+            // Remover event listeners anteriores
+            modalSendBtn.replaceWith(modalSendBtn.cloneNode(true));
+            
+            // Agregar nuevo event listener
+            document.getElementById('sendEmailBtn').addEventListener('click', function() {
+                const email = document.getElementById('recipientEmail').value;
+                const subject = document.getElementById('emailSubject').value;
+                const message = document.getElementById('emailMessage').value;
+                
+                if (!email) {
+                    alert('Por favor ingresa un correo electrónico válido');
+                    return;
+                }
+
+                if (!isValidEmail(email)) {
+                    alert('Por favor ingresa un correo electrónico válido');
+                    return;
+                }
+
+                if (!subject) {
+                    alert('Por favor ingresa un asunto para el correo');
+                    return;
+                }
+
+                sendEmailWithPDF(email, subject, message);
+            });
+        }
 
         // Enfocar el campo de email automáticamente
         setTimeout(() => {
             const emailInput = document.getElementById('recipientEmail');
             if (emailInput) emailInput.focus();
         }, 500);
-
-        // Configurar evento del botón enviar
-        document.getElementById('sendEmailBtn').onclick = function() {
-            const email = document.getElementById('recipientEmail').value;
-            const subject = document.getElementById('emailSubject').value;
-            const message = document.getElementById('emailMessage').value;
-            
-            if (!email) {
-                alert('Por favor ingresa un correo electrónico válido');
-                return;
-            }
-
-            if (!isValidEmail(email)) {
-                alert('Por favor ingresa un correo electrónico válido');
-                return;
-            }
-
-            if (!subject) {
-                alert('Por favor ingresa un asunto para el correo');
-                return;
-            }
-
-            sendEmailWithPDF(email, subject, message);
-        };
     }
 
     // Función de validación de email
@@ -1110,15 +1140,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para enviar email con PDF
     function sendEmailWithPDF(email, subject, message) {
+        console.log('📧 Iniciando envío de email a:', email);
+        
         // Mostrar loading
         showLoading('Enviando correo...', 'Generando PDF y preparando envío');
         
         // Deshabilitar botón de envío
         const sendBtn = document.getElementById('sendEmailBtn');
-        sendBtn.disabled = true;
+        if (sendBtn) sendBtn.disabled = true;
 
         // Usar la función generatePDF con callback
         generatePDF(function(pdfBlob) {
+            if (!pdfBlob) {
+                console.error('❌ No se pudo generar el PDF');
+                hideLoading();
+                if (sendBtn) sendBtn.disabled = false;
+                alert('❌ Error al generar el PDF. Intenta nuevamente.');
+                return;
+            }
+
             // Actualizar texto del loading
             showLoading('Enviando correo...', 'PDF generado, enviando a destinatario...');
             
@@ -1128,17 +1168,22 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('subject', subject);
             formData.append('message', message);
 
-            // ✅ ENVÍO REAL - Reemplaza la simulación
+            console.log('📤 Enviando datos al servidor...');
+            
+            // ✅ ENVÍO REAL
             sendEmailReal(formData, function(success) {
+                console.log('📨 Resultado del envío:', success);
+                
                 // Ocultar loading
                 hideLoading();
                 
                 // Restaurar botón
-                sendBtn.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
 
                 if (success) {
                     alert('✅ PDF enviado correctamente a ' + email);
-                    bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+                    const emailModal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
+                    if (emailModal) emailModal.hide();
                 } else {
                     alert('❌ Error al enviar el correo. Intenta nuevamente.');
                 }
@@ -1146,34 +1191,81 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ FUNCIÓN REAL DE ENVÍO
+    // ✅ FUNCIÓN REAL DE ENVÍO MEJORADA
     function sendEmailReal(formData, callback) {
-        fetch('/send-pdf-email/', {  // Ajusta esta URL
+        console.log('🔍 Verificando URL /send-pdf-email/');
+        
+        fetch('/send-pdf-email/', {
             method: 'POST',
             body: formData,
             headers: {
                 'X-CSRFToken': getCSRFToken(),
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('📨 Status de respuesta:', response.status, response.statusText);
+            
+            // Primero obtener el texto para ver qué devuelve
+            return response.text().then(text => {
+                console.log('📨 Contenido de respuesta:', text.substring(0, 200));
+                
+                try {
+                    // Intentar parsear como JSON
+                    const data = JSON.parse(text);
+                    return data;
+                } catch (e) {
+                    console.error('❌ No es JSON válido:', text);
+                    throw new Error('El servidor devolvió: ' + text.substring(0, 100));
+                }
+            });
+        })
         .then(data => {
-            console.log('Respuesta del servidor:', data);
-            callback(data.success);
+            console.log('✅ Respuesta JSON del servidor:', data);
+            if (data && typeof data.success !== 'undefined') {
+                callback(data.success);
+            } else {
+                console.error('❌ Respuesta inesperada:', data);
+                callback(false);
+            }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('❌ Error en la solicitud:', error);
             callback(false);
         });
     }
 
     // ✅ OBTENER CSRF TOKEN (Django)
     function getCSRFToken() {
+        // Primero intentar desde el meta tag
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfTokenMeta) {
+            return csrfTokenMeta.getAttribute('content');
+        }
+        
+        // Luego desde el input hidden
+        const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfTokenInput) {
+            return csrfTokenInput.value;
+        }
+        
+        // Finalmente desde las cookies
         const cookieValue = document.cookie
             .split('; ')
             .find(row => row.startsWith('csrftoken='))
             ?.split('=')[1];
-        return cookieValue;
+            
+        if (!cookieValue) {
+            console.error('❌ No se pudo encontrar el CSRF token');
+        }
+        
+        return cookieValue || '';
     }
+
+    // 🔍 DIAGNÓSTICO: Verificar si la URL existe
+    console.log('🔍 Verificando configuración de email...');
+    fetch('/send-pdf-email/')
+        .then(response => console.log('✅ URL /send-pdf-email/ existe. Status:', response.status))
+        .catch(error => console.error('❌ URL /send-pdf-email/ no existe:', error));
 });
 </script>
 </body>

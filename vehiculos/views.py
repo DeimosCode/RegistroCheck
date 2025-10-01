@@ -607,43 +607,79 @@ def get_sistema_icon(detalle_attr):
 
 
 
-# views.py
+# views.py email - VERSIÓN MEJORADA
 from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+import logging
+
+# Configurar logger
+logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def send_pdf_email(request):
     if request.method == 'POST':
         try:
-            # Obtener los datos del formulario
+            # Verificar que existen los archivos y datos
+            if 'pdf' not in request.FILES:
+                return JsonResponse({'success': False, 'error': 'No se encontró el archivo PDF'})
+            
             pdf_file = request.FILES['pdf']
-            email = request.POST['email']
-            subject = request.POST['subject']
-            message = request.POST['message']
+            email = request.POST.get('email', '').strip()
+            subject = request.POST.get('subject', '').strip()
+            message = request.POST.get('message', '').strip()
+            
+            # Validaciones básicas
+            if not email:
+                return JsonResponse({'success': False, 'error': 'El email es requerido'})
+            
+            if not subject:
+                return JsonResponse({'success': False, 'error': 'El asunto es requerido'})
+            
+            logger.info(f"📧 Intentando enviar email a: {email}")
+            logger.info(f"📄 Archivo PDF: {pdf_file.name} ({pdf_file.size} bytes)")
             
             # Crear el email
             email_msg = EmailMessage(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,  # Desde
-                [email],  # Para
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[email],
+                reply_to=[settings.DEFAULT_FROM_EMAIL],
             )
             
             # Adjuntar el PDF
             email_msg.attach(
-                pdf_file.name,
-                pdf_file.read(),
-                'application/pdf'
+                filename=pdf_file.name,
+                content=pdf_file.read(),
+                mimetype='application/pdf'
             )
             
-            # Enviar el correo
-            email_msg.send()
+            # Enviar el correo (con manejo de errores)
+            result = email_msg.send(fail_silently=False)
             
-            return JsonResponse({'success': True, 'message': 'Correo enviado correctamente'})
-            
+            if result == 1:
+                logger.info(f"✅ Correo enviado exitosamente a: {email}")
+                return JsonResponse({
+                    'success': True, 
+                    'message': 'Correo enviado correctamente'
+                })
+            else:
+                logger.error(f"❌ El correo no se pudo enviar. Resultado: {result}")
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'El correo no se pudo enviar'
+                })
+                
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            logger.error(f"🔥 Error crítico al enviar email: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': f'Error del servidor: {str(e)}'
+            })
     
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    return JsonResponse({
+        'success': False, 
+        'error': 'Método no permitido. Use POST.'
+    })
