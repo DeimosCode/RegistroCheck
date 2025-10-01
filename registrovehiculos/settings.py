@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = os.getenv("SECRET_KEY")
-SECRET_KEY = 'django-insecure-lv!s0_=6@6ju)sbs7$afmsy!gvry!896rh!669^b$u540$(-_t'
+SECRET_KEY = os.getenv('SECRET_KEY', 'clave-solo-para-desarrollo-local')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -175,11 +175,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# settings.py
+# ✅ CONFIGURACIÓN DE EMAIL COMPLETA
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Para Gmail
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'darkfantasy712@gmail.com'  # Tu email de Gmail
-EMAIL_HOST_PASSWORD = 'qvwtfxgyrzatcvap'  # Contraseña de aplicación de Gmail
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'darkfantasy712@gmail.com'
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD', '')  # ← Desde variable de entorno
 DEFAULT_FROM_EMAIL = 'darkfantasy712@gmail.com'
+SERVER_EMAIL = 'darkfantasy712@gmail.com'
+EMAIL_TIMEOUT = 30
