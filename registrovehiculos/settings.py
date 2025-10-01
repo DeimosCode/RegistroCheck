@@ -136,5 +136,6 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'darkfantasy712@gmail.com'
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'darkfantasy712@gmail.com'
-SERVER_EMAIL = 'darkfantasy712@gmail.com'
-EMAIL_TIMEOUT = 30
+
+# ✅ CONFIGURACIÓN CRÍTICA PARA RAILWAY
+EMAIL_TIMEOUT = 10  # Reducir timeout a 10 segundos

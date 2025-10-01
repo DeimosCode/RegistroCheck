@@ -608,76 +608,92 @@ def get_sistema_icon(detalle_attr):
 
 
 # views.py - VERSIÓN CON MEJOR DEBUG
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, send_mail
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import logging
-import traceback
+import socket
 
 logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def send_pdf_email(request):
-    if request.method == 'POST':
-        try:
-            logger.info("📧 Iniciando proceso de envío de email")
-            
-            # Verificar archivo PDF
-            if 'pdf' not in request.FILES:
-                logger.error("❌ No se recibió archivo PDF")
-                return JsonResponse({'success': False, 'error': 'No se recibió el archivo PDF'})
-            
-            pdf_file = request.FILES['pdf']
-            email = request.POST.get('email', '').strip()
-            subject = request.POST.get('subject', '').strip()
-            message = request.POST.get('message', '').strip()
-            
-            logger.info(f"📨 Datos: email={email}, subject={subject}, pdf_size={pdf_file.size}")
-            
-            # Validaciones
-            if not email:
-                return JsonResponse({'success': False, 'error': 'Email requerido'})
-            
-            # Verificar configuración de email
-            if not settings.EMAIL_HOST_PASSWORD:
-                logger.error("❌ EMAIL_HOST_PASSWORD no configurado")
-                return JsonResponse({'success': False, 'error': 'Configuración de email incompleta'})
-            
-            # Crear email
-            email_msg = EmailMessage(
-                subject=subject,
-                body=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[email],
-            )
-            
-            # Adjuntar PDF
-            pdf_content = pdf_file.read()
-            email_msg.attach(
-                filename=pdf_file.name,
-                content=pdf_content,
-                mimetype='application/pdf'
-            )
-            
-            logger.info("📤 Enviando email...")
-            
-            # Enviar email
-            result = email_msg.send(fail_silently=False)
-            
-            if result == 1:
-                logger.info("✅ Email enviado exitosamente")
-                return JsonResponse({'success': True, 'message': 'Correo enviado correctamente'})
-            else:
-                logger.error(f"❌ Email no enviado. Resultado: {result}")
-                return JsonResponse({'success': False, 'error': 'No se pudo enviar el correo'})
-                
-        except Exception as e:
-            error_traceback = traceback.format_exc()
-            logger.error(f"🔥 ERROR: {str(e)}\n{error_traceback}")
-            return JsonResponse({
-                'success': False, 
-                'error': f'Error del servidor: {str(e)}'
-            })
+    logger.info("📧 VISTA send_pdf_email llamada")
     
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+    
+    try:
+        # Verificar datos básicos
+        if 'pdf' not in request.FILES:
+            return JsonResponse({'success': False, 'error': 'No se recibió archivo PDF'})
+        
+        pdf_file = request.FILES['pdf']
+        email = request.POST.get('email', '').strip()
+        subject = request.POST.get('subject', 'Reporte Vehículo').strip()
+        message = request.POST.get('message', 'Se adjunta el reporte del vehículo.').strip()
+        
+        logger.info(f"📨 Procesando: email={email}, archivo={pdf_file.name}")
+        
+        # Validación mínima
+        if not email or '@' not in email:
+            return JsonResponse({'success': False, 'error': 'Email inválido'})
+        
+        # PRIMERO: Probar conexión SMTP con email simple
+        logger.info("🔌 Probando conexión SMTP...")
+        
+        try:
+            # Email de prueba simple y rápido
+            send_mail(
+                f"Prueba: {subject}",
+                "Preparando envío del reporte...",
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            logger.info("✅ Conexión SMTP exitosa")
+        except socket.timeout:
+            logger.error("❌ Timeout en conexión SMTP")
+            return JsonResponse({'success': False, 'error': 'Timeout en servidor de email'})
+        except Exception as e:
+            logger.error(f"❌ Error SMTP: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Error de email: {str(e)}'})
+        
+        # SEGUNDO: Enviar email con PDF (más lento)
+        logger.info("📤 Enviando email con PDF adjunto...")
+        
+        email_msg = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email],
+        )
+        
+        # Adjuntar PDF
+        pdf_content = pdf_file.read()
+        email_msg.attach(
+            filename=f"reporte_vehiculo.pdf",
+            content=pdf_content,
+            mimetype='application/pdf'
+        )
+        
+        # Enviar con manejo de timeout
+        result = email_msg.send(fail_silently=False)
+        
+        if result == 1:
+            logger.info("✅ Email con PDF enviado exitosamente")
+            return JsonResponse({'success': True, 'message': 'Correo enviado correctamente'})
+        else:
+            logger.error(f"❌ Email no enviado. Resultado: {result}")
+            return JsonResponse({'success': False, 'error': 'No se pudo enviar el correo'})
+            
+    except socket.timeout:
+        logger.error("❌ Timeout general en envío de email")
+        return JsonResponse({'success': False, 'error': 'Timeout: el servidor tardó demasiado'})
+    except Exception as e:
+        logger.error(f"🔥 ERROR GENERAL: {str(e)}")
+        return JsonResponse({
+            'success': False, 
+            'error': f'Error del servidor: {str(e)}'
+        })
