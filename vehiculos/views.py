@@ -607,79 +607,77 @@ def get_sistema_icon(detalle_attr):
 
 
 
-# views.py email - VERSIÓN MEJORADA
+# views.py - VERSIÓN CON MEJOR DEBUG
 from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import logging
+import traceback
 
-# Configurar logger
 logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def send_pdf_email(request):
     if request.method == 'POST':
         try:
-            # Verificar que existen los archivos y datos
+            logger.info("📧 Iniciando proceso de envío de email")
+            
+            # Verificar archivo PDF
             if 'pdf' not in request.FILES:
-                return JsonResponse({'success': False, 'error': 'No se encontró el archivo PDF'})
+                logger.error("❌ No se recibió archivo PDF")
+                return JsonResponse({'success': False, 'error': 'No se recibió el archivo PDF'})
             
             pdf_file = request.FILES['pdf']
             email = request.POST.get('email', '').strip()
             subject = request.POST.get('subject', '').strip()
             message = request.POST.get('message', '').strip()
             
-            # Validaciones básicas
+            logger.info(f"📨 Datos: email={email}, subject={subject}, pdf_size={pdf_file.size}")
+            
+            # Validaciones
             if not email:
-                return JsonResponse({'success': False, 'error': 'El email es requerido'})
+                return JsonResponse({'success': False, 'error': 'Email requerido'})
             
-            if not subject:
-                return JsonResponse({'success': False, 'error': 'El asunto es requerido'})
+            # Verificar configuración de email
+            if not settings.EMAIL_HOST_PASSWORD:
+                logger.error("❌ EMAIL_HOST_PASSWORD no configurado")
+                return JsonResponse({'success': False, 'error': 'Configuración de email incompleta'})
             
-            logger.info(f"📧 Intentando enviar email a: {email}")
-            logger.info(f"📄 Archivo PDF: {pdf_file.name} ({pdf_file.size} bytes)")
-            
-            # Crear el email
+            # Crear email
             email_msg = EmailMessage(
                 subject=subject,
                 body=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[email],
-                reply_to=[settings.DEFAULT_FROM_EMAIL],
             )
             
-            # Adjuntar el PDF
+            # Adjuntar PDF
+            pdf_content = pdf_file.read()
             email_msg.attach(
                 filename=pdf_file.name,
-                content=pdf_file.read(),
+                content=pdf_content,
                 mimetype='application/pdf'
             )
             
-            # Enviar el correo (con manejo de errores)
+            logger.info("📤 Enviando email...")
+            
+            # Enviar email
             result = email_msg.send(fail_silently=False)
             
             if result == 1:
-                logger.info(f"✅ Correo enviado exitosamente a: {email}")
-                return JsonResponse({
-                    'success': True, 
-                    'message': 'Correo enviado correctamente'
-                })
+                logger.info("✅ Email enviado exitosamente")
+                return JsonResponse({'success': True, 'message': 'Correo enviado correctamente'})
             else:
-                logger.error(f"❌ El correo no se pudo enviar. Resultado: {result}")
-                return JsonResponse({
-                    'success': False, 
-                    'error': 'El correo no se pudo enviar'
-                })
+                logger.error(f"❌ Email no enviado. Resultado: {result}")
+                return JsonResponse({'success': False, 'error': 'No se pudo enviar el correo'})
                 
         except Exception as e:
-            logger.error(f"🔥 Error crítico al enviar email: {str(e)}")
+            error_traceback = traceback.format_exc()
+            logger.error(f"🔥 ERROR: {str(e)}\n{error_traceback}")
             return JsonResponse({
                 'success': False, 
                 'error': f'Error del servidor: {str(e)}'
             })
     
-    return JsonResponse({
-        'success': False, 
-        'error': 'Método no permitido. Use POST.'
-    })
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
